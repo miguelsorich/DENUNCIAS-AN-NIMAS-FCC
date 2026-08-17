@@ -75,10 +75,6 @@ export const PortalEstudiante: React.FC<PortalEstudianteProps> = ({
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>Sin almacenamiento de IP</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>Revisión directa por el Decanato</span>
-            </div>
           </div>
         </div>
       </section>
