@@ -5,7 +5,6 @@ export const COLUMNAS_REQUERIDAS = [
   'SIGLA',
   'GR',
   'NOMBRE DE LA MATERIA',
-  'CARRERAS',
   'DOCENTE',
   'DÍA',
   'HORARIO',
@@ -20,32 +19,129 @@ export const normalizarHeader = (header: string): string => {
     .toUpperCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // remove accents (DÍA -> DIA)
-    .replace(/[\t_]/g, ' ')
+    .replace(/[\t_\-\/\\:;.]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 };
 
 export const mapCanonicalHeader = (headerNormalized: string): string | null => {
-  if (headerNormalized === 'SIGLA') return 'SIGLA';
-  if (headerNormalized === 'GR' || headerNormalized === 'GRUPO') return 'GR';
+  if (!headerNormalized) return null;
+
+  // SIGLA
+  if (
+    headerNormalized === 'SIGLA' ||
+    headerNormalized === 'SIGLA MATERIA' ||
+    headerNormalized === 'SIGLA DE MATERIA' ||
+    headerNormalized === 'CODIGO' ||
+    headerNormalized === 'COD' ||
+    headerNormalized === 'COD MATERIA' ||
+    headerNormalized === 'CODIGO MATERIA' ||
+    headerNormalized === 'CLAVE'
+  ) {
+    return 'SIGLA';
+  }
+
+  // GR / GRUPO
+  if (
+    headerNormalized === 'GR' ||
+    headerNormalized === 'GRUPO' ||
+    headerNormalized === 'GRP' ||
+    headerNormalized === 'PARALELO' ||
+    headerNormalized === 'SECCION' ||
+    headerNormalized === 'SEC' ||
+    headerNormalized === 'G'
+  ) {
+    return 'GR';
+  }
+
+  // NOMBRE DE LA MATERIA
   if (
     headerNormalized === 'NOMBRE DE LA MATERIA' ||
+    headerNormalized === 'NOMBRE DE MATERIA' ||
     headerNormalized === 'NOMBRE MATERIA' ||
-    headerNormalized === 'MATERIA'
-  )
+    headerNormalized === 'MATERIA' ||
+    headerNormalized === 'ASIGNATURA' ||
+    headerNormalized === 'NOMBRE ASIGNATURA' ||
+    headerNormalized === 'NOMBRE DE LA ASIGNATURA' ||
+    headerNormalized === 'DESCRIPCION'
+  ) {
     return 'NOMBRE DE LA MATERIA';
-  if (headerNormalized === 'CARRERAS' || headerNormalized === 'CARRERA') return 'CARRERAS';
-  if (headerNormalized === 'DOCENTE' || headerNormalized === 'PROFESOR') return 'DOCENTE';
-  if (headerNormalized === 'DIA' || headerNormalized === 'DÍA') return 'DÍA';
-  if (headerNormalized === 'HORARIO' || headerNormalized === 'HORA') return 'HORARIO';
-  if (headerNormalized === 'AULA' || headerNormalized === 'AMBIENTE') return 'AULA';
+  }
+
+  // CARRERAS (Opcional)
+  if (
+    headerNormalized === 'CARRERAS' ||
+    headerNormalized === 'CARRERA' ||
+    headerNormalized === 'PLAN' ||
+    headerNormalized === 'PLANES' ||
+    headerNormalized === 'PROGRAMA'
+  ) {
+    return 'CARRERAS';
+  }
+
+  // DOCENTE
+  if (
+    headerNormalized === 'DOCENTE' ||
+    headerNormalized === 'DOCENTES' ||
+    headerNormalized === 'PROFESOR' ||
+    headerNormalized === 'PROFESORA' ||
+    headerNormalized === 'PROFESORES' ||
+    headerNormalized === 'NOMBRE DOCENTE' ||
+    headerNormalized === 'NOMBRE DEL DOCENTE' ||
+    headerNormalized === 'DOCENTE TITULAR' ||
+    headerNormalized === 'DOCENTE RESPONSABLE' ||
+    headerNormalized === 'CATEDRATICO' ||
+    headerNormalized === 'INSTRUCTOR'
+  ) {
+    return 'DOCENTE';
+  }
+
+  // DÍA
+  if (
+    headerNormalized === 'DIA' ||
+    headerNormalized === 'DÍA' ||
+    headerNormalized === 'DIAS' ||
+    headerNormalized === 'DÍAS' ||
+    headerNormalized === 'DIAS DE CLASE' ||
+    headerNormalized === 'DIA DE CLASE'
+  ) {
+    return 'DÍA';
+  }
+
+  // HORARIO
+  if (
+    headerNormalized === 'HORARIO' ||
+    headerNormalized === 'HORARIOS' ||
+    headerNormalized === 'HORA' ||
+    headerNormalized === 'HORAS' ||
+    headerNormalized === 'HORARIO DE CLASES' ||
+    headerNormalized === 'HORA CLASE' ||
+    headerNormalized === 'TURNO'
+  ) {
+    return 'HORARIO';
+  }
+
+  // AULA
+  if (
+    headerNormalized === 'AULA' ||
+    headerNormalized === 'AULAS' ||
+    headerNormalized === 'AMBIENTE' ||
+    headerNormalized === 'AMBIENTES' ||
+    headerNormalized === 'SALA' ||
+    headerNormalized === 'SALON' ||
+    headerNormalized === 'LABORATORIO' ||
+    headerNormalized === 'UBICACION' ||
+    headerNormalized === 'CURSO'
+  ) {
+    return 'AULA';
+  }
 
   return null;
 };
 
 export const validarExtensionArchivo = (fileName: string): boolean => {
   const extension = fileName.split('.').pop()?.toLowerCase();
-  return extension === 'xlsx' || extension === 'csv';
+  return extension === 'xlsx' || extension === 'xls' || extension === 'csv';
 };
 
 /**
@@ -64,12 +160,13 @@ export const validarYParsearMatrizFilas = (
     };
   }
 
-  // Find the header row (usually row 0, but check first 5 rows in case of blank top rows)
-  let headerRowIndex = -1;
-  let headerIndexMap = new Map<string, number>();
-  let columnasEncontradas: string[] = [];
+  // Find the header row by checking up to 30 rows and picking the row with most matches
+  let bestHeaderRowIndex = -1;
+  let bestHeaderIndexMap = new Map<string, number>();
+  let bestColumnasEncontradas: string[] = [];
+  let maxMatches = 0;
 
-  for (let r = 0; r < Math.min(5, filasMatriz.length); r++) {
+  for (let r = 0; r < Math.min(30, filasMatriz.length); r++) {
     const row = filasMatriz[r];
     if (!row || row.length === 0) continue;
 
@@ -77,7 +174,7 @@ export const validarYParsearMatrizFilas = (
     const tempEncontradas: string[] = [];
 
     row.forEach((cell, colIdx) => {
-      if (cell !== undefined && cell !== null) {
+      if (cell !== undefined && cell !== null && String(cell).trim() !== '') {
         const norm = normalizarHeader(String(cell));
         const canonical = mapCanonicalHeader(norm);
         if (canonical) {
@@ -89,32 +186,29 @@ export const validarYParsearMatrizFilas = (
       }
     });
 
-    // If we found at least 2 canonical headers in this row, treat it as the header row
-    if (tempEncontradas.length >= 2) {
-      headerRowIndex = r;
-      headerIndexMap = tempMap;
-      columnasEncontradas = tempEncontradas;
-      break;
+    if (tempEncontradas.length > maxMatches) {
+      maxMatches = tempEncontradas.length;
+      bestHeaderRowIndex = r;
+      bestHeaderIndexMap = tempMap;
+      bestColumnasEncontradas = tempEncontradas;
     }
   }
 
-  if (headerRowIndex === -1) {
-    // If not found in first rows, try with first non-empty row
-    headerRowIndex = 0;
-    const row = filasMatriz[0] || [];
-    row.forEach((cell, colIdx) => {
-      if (cell !== undefined && cell !== null) {
-        const norm = normalizarHeader(String(cell));
-        const canonical = mapCanonicalHeader(norm);
-        if (canonical) {
-          headerIndexMap.set(canonical, colIdx);
-          if (!columnasEncontradas.includes(canonical)) {
-            columnasEncontradas.push(canonical);
-          }
-        }
-      }
-    });
+  if (bestHeaderRowIndex === -1 || maxMatches < 2) {
+    return {
+      esValido: false,
+      columnasFaltantes: [...COLUMNAS_REQUERIDAS],
+      columnasEncontradas: bestColumnasEncontradas,
+      totalFilas: 0,
+      errores: [
+        'No se encontraron los encabezados correspondientes al Maestro de Oferta (SIGLA, GR, MATERIA, DOCENTE, DÍA, HORARIO, AULA).',
+      ],
+    };
   }
+
+  const headerRowIndex = bestHeaderRowIndex;
+  const headerIndexMap = bestHeaderIndexMap;
+  const columnasEncontradas = bestColumnasEncontradas;
 
   const columnasFaltantes = COLUMNAS_REQUERIDAS.filter((col) => !headerIndexMap.has(col));
 
@@ -152,7 +246,7 @@ export const validarYParsearMatrizFilas = (
     const sigla = getVal('SIGLA');
     const grupo = getVal('GR');
     const nombreMateria = getVal('NOMBRE DE LA MATERIA');
-    const carreras = getVal('CARRERAS');
+    const carreras = getVal('CARRERAS') || '-';
     const docente = getVal('DOCENTE');
     const dia = getVal('DÍA');
     const horario = getVal('HORARIO');

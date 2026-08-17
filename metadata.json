@@ -1,6 +1,6 @@
 {
-  "name": "Reporte de Inasistencia Docente",
-  "description": "Sistema de denuncias anónimas: Módulo 1 (Inasistencia Docente), Módulo 2 (Denuncias Varias), Módulo 3 (Revisión de Denuncias) y Módulo 4 (Reportes y Exportación).",
+  "name": "Voz Anónima_Control de Asistencia al Docente",
+  "description": "Voz Anónima — Habla con confianza. Sistema institucional de control de asistencia al docente y denuncias.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

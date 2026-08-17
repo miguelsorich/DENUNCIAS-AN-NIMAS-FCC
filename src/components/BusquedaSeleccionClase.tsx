@@ -13,21 +13,12 @@ import {
 } from 'lucide-react';
 import { ReporteInasistenciaForm } from './ReporteInasistenciaForm';
 import { ReporteInasistenciaConfirmacion } from './ReporteInasistenciaConfirmacion';
+import { buscarClasesEnMaestro } from '../utils/searchUtils';
 
 interface BusquedaSeleccionClaseProps {
   maestroVigente: MaestroOfertaVigente | null;
   onRegistrarReporte?: (reporte: ReporteInasistencia) => void;
 }
-
-// Función para normalizar texto (sin tildes, minúsculas, espacios colapsados)
-const normalizarBusqueda = (texto: string): string => {
-  if (!texto) return '';
-  return texto
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-};
 
 export const BusquedaSeleccionClase: React.FC<BusquedaSeleccionClaseProps> = ({
   maestroVigente,
@@ -41,29 +32,7 @@ export const BusquedaSeleccionClase: React.FC<BusquedaSeleccionClaseProps> = ({
 
   // Filtrado reactivo en tiempo real sobre el Maestro de Oferta vigente
   const resultadosFiltrados = useMemo(() => {
-    if (!registrosMaestro || registrosMaestro.length === 0) {
-      return [];
-    }
-
-    const query = normalizarBusqueda(terminoBusqueda);
-    if (!query) {
-      // Si el término está vacío, mostramos todas las clases del maestro vigente
-      return registrosMaestro;
-    }
-
-    return registrosMaestro.filter((clase) => {
-      const docenteNorm = normalizarBusqueda(clase.docente);
-      const siglaNorm = normalizarBusqueda(clase.sigla);
-      const grupoNorm = normalizarBusqueda(clase.grupo);
-      const materiaNorm = normalizarBusqueda(clase.nombreMateria);
-
-      return (
-        docenteNorm.includes(query) ||
-        siglaNorm.includes(query) ||
-        grupoNorm.includes(query) ||
-        materiaNorm.includes(query)
-      );
-    });
+    return buscarClasesEnMaestro(registrosMaestro, terminoBusqueda);
   }, [registrosMaestro, terminoBusqueda]);
 
   const handleSeleccionarClase = (clase: OfertaClase) => {

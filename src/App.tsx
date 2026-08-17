@@ -28,10 +28,19 @@ export default function App() {
     try {
       const guardado = localStorage.getItem(STORAGE_KEY_MAESTRO);
       if (guardado) {
-        return JSON.parse(guardado);
+        const parsed = JSON.parse(guardado);
+        if (parsed && Array.isArray(parsed.registros) && parsed.registros.length > 0) {
+          return {
+            semestre: parsed.semestre || 'Semestre II / 2026',
+            fechaImportacion: parsed.fechaImportacion || 'Importado por Administrador',
+            nombreArchivo: parsed.nombreArchivo || 'maestro_oferta.xlsx',
+            totalRegistros: parsed.registros.length,
+            registros: parsed.registros,
+          };
+        }
       }
-    } catch {
-      // Ignorar errores de localStorage
+    } catch (e) {
+      console.warn('No se pudo cargar maestro de localStorage, usando predeterminado:', e);
     }
 
     return {
@@ -162,7 +171,7 @@ export default function App() {
             )}
           </div>
           <div>
-            <span>Sistema Institucional de Gestión y Denuncias de la Facultad</span>
+            <span>Voz Anónima — Habla con confianza</span>
           </div>
         </div>
       </footer>

@@ -23,14 +23,12 @@ export const Header: React.FC<HeaderProps> = ({
               <GraduationCap className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                Facultad • Sistema de Denuncias Anónimas
-              </p>
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
-                {moduloActivo === 'inasistencia' && 'Reporte de Inasistencia Docente'}
-                {moduloActivo === 'denuncias-varias' && 'Denuncias varias — Realizar otra denuncia'}
-                {moduloActivo === 'admin' && 'Administración — Panel de Gestión y Reportes'}
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight tracking-tight">
+                Voz Anónima
               </h1>
+              <p className="text-xs font-semibold text-blue-900 leading-none mt-0.5">
+                Habla con confianza
+              </p>
             </div>
           </div>
 
