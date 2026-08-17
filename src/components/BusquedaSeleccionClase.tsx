@@ -73,25 +73,12 @@ export const BusquedaSeleccionClase: React.FC<BusquedaSeleccionClaseProps> = ({
         </div>
         <div className="space-y-2">
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Listo para Cargar el Maestro de Oferta Oficial
+            Catálogo Académico del Semestre
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
-            La plataforma se encuentra limpia y lista. Para habilitar la búsqueda de materias, docentes y aulas para los estudiantes, el Administrador debe importar el archivo Excel oficial de la facultad.
+            El listado oficial de materias, grupos y horarios está en proceso de habilitación por la administración facultativa. Puedes realizar reportes generales o denuncias institucionales en la sección de <strong className="text-blue-950 font-bold">Denuncias Varias</strong>.
           </p>
         </div>
-
-        {onIrAAdmin && (
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={onIrAAdmin}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-sm shadow-xs transition-all cursor-pointer"
-            >
-              <GraduationCap className="w-4 h-4" />
-              <span>Ir al Panel de Administración a Subir Excel</span>
-            </button>
-          </div>
-        )}
       </div>
     );
   }
