@@ -18,11 +18,13 @@ import { buscarClasesEnMaestro } from '../utils/searchUtils';
 interface BusquedaSeleccionClaseProps {
   maestroVigente: MaestroOfertaVigente | null;
   onRegistrarReporte?: (reporte: ReporteInasistencia) => void;
+  onIrAAdmin?: () => void;
 }
 
 export const BusquedaSeleccionClase: React.FC<BusquedaSeleccionClaseProps> = ({
   maestroVigente,
   onRegistrarReporte,
+  onIrAAdmin,
 }) => {
   const [terminoBusqueda, setTerminoBusqueda] = useState<string>('');
   const [claseSeleccionada, setClaseSeleccionada] = useState<OfertaClase | null>(null);
@@ -65,18 +67,31 @@ export const BusquedaSeleccionClase: React.FC<BusquedaSeleccionClaseProps> = ({
   // CASO: No existe un Maestro de Oferta vigente importado
   if (!maestroVigente || registrosMaestro.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-4 shadow-xs">
-        <div className="w-14 h-14 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto">
-          <AlertCircle className="w-7 h-7" />
+      <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center space-y-5 shadow-xs max-w-2xl mx-auto">
+        <div className="w-16 h-16 bg-blue-50 text-blue-900 rounded-2xl flex items-center justify-center mx-auto border border-blue-200">
+          <BookOpen className="w-8 h-8" />
         </div>
-        <div className="space-y-1 max-w-md mx-auto">
-          <h2 className="text-xl font-bold text-slate-900">
-            No hay información disponible para realizar la búsqueda
+        <div className="space-y-2">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Listo para Cargar el Maestro de Oferta Oficial
           </h2>
-          <p className="text-sm text-slate-600">
-            El administrador aún no ha importado el Maestro de Oferta vigente de la facultad para este semestre. Por favor, comunícate con la administración.
+          <p className="text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+            La plataforma se encuentra limpia y lista. Para habilitar la búsqueda de materias, docentes y aulas para los estudiantes, el Administrador debe importar el archivo Excel oficial de la facultad.
           </p>
         </div>
+
+        {onIrAAdmin && (
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={onIrAAdmin}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-sm shadow-xs transition-all cursor-pointer"
+            >
+              <GraduationCap className="w-4 h-4" />
+              <span>Ir al Panel de Administración a Subir Excel</span>
+            </button>
+          </div>
+        )}
       </div>
     );
   }

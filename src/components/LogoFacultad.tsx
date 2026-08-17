@@ -7,115 +7,256 @@ interface LogoFacultadProps {
 
 export const LogoFacultad: React.FC<LogoFacultadProps> = ({ 
   className = "w-12 h-14",
-  alt = "Escudo Oficial Facultad de Ciencias Contables - UAGRM"
+  alt = "Escudo Oficial Facultad de Ciencias Contables, Auditoría, Sistemas de Control de Gestión y Finanzas - UAGRM"
 }) => {
   return (
     <div className={`relative inline-flex items-center justify-center shrink-0 select-none ${className}`} title={alt}>
       <svg 
         xmlns="http://www.w3.org/2000/svg" 
-        viewBox="0 0 500 580" 
+        viewBox="0 0 540 640" 
         className="w-full h-full object-contain"
         aria-label={alt}
         role="img"
         preserveAspectRatio="xMidYMid meet"
       >
-        {/* Defs for text paths */}
         <defs>
-          <path id="pathBlueTextTopComp" d="M 85,310 C 60,95 440,95 415,310" fill="none" />
+          {/* Path for text along the blue oval perimeter */}
+          <path
+            id="pathCurvedTextFacultad"
+            d="M 90,340 C 65,100 475,100 450,340"
+            fill="none"
+          />
+          
+          {/* Subtle gradient for depth */}
+          <linearGradient id="goldWingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FFDE17" />
+            <stop offset="100%" stopColor="#F58220" />
+          </linearGradient>
+
+          <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.25" />
+          </filter>
         </defs>
 
-        {/* Ribbon (Bottom) */}
-        <g id="ribbon-comp" fill="#8D5524" stroke="#5C3615" strokeWidth="1.5">
-          <path d="M 245,520 L 210,545 L 175,575 L 205,580 L 235,550 L 248,530 Z" />
-          <path d="M 255,520 L 290,545 L 325,575 L 295,580 L 265,550 L 252,530 Z" />
-          <path d="M 230,515 Q 250,505 270,515 Q 260,535 240,535 Z" fill="#9E622B" />
+        {/* 1. Laurel Wreath (Ramas de Laurel Verdes con Frutos Rojos) */}
+        {/* Crossed Ribbon Base */}
+        <g id="ribbon-base">
+          <path 
+            d="M 270,555 C 255,570 215,610 185,635 C 205,638 228,628 245,605 C 258,588 268,568 270,555 Z" 
+            fill="#8D5524" 
+            stroke="#5C3615" 
+            strokeWidth="1.5" 
+          />
+          <path 
+            d="M 270,555 C 285,570 325,610 355,635 C 335,638 312,628 295,605 C 282,588 272,568 270,555 Z" 
+            fill="#8D5524" 
+            stroke="#5C3615" 
+            strokeWidth="1.5" 
+          />
+          <ellipse cx="270" cy="565" rx="20" ry="12" fill="#9E622B" stroke="#5C3615" strokeWidth="1.5" />
         </g>
 
         {/* Left Laurel Branch */}
-        <g id="laurel-left-comp" fill="#009245" stroke="#006837" strokeWidth="1">
-          <path d="M 235,510 C 200,505 165,480 140,445 C 155,445 170,435 175,420 C 150,425 130,410 115,385 C 130,385 145,375 150,360 C 125,365 105,345 90,315 C 105,315 120,305 125,290 C 100,295 80,270 70,235 C 85,235 100,225 105,210 C 80,210 65,180 60,145 C 75,148 90,140 95,125 C 75,120 65,95 65,65 C 80,75 95,75 105,65 C 88,50 82,30 85,10 C 100,25 115,30 130,25 C 118,40 120,60 135,70 C 115,85 112,110 125,128 C 105,140 102,170 118,190 C 100,205 98,240 115,260 C 100,280 100,315 120,335 C 108,355 110,390 135,410 C 125,430 135,465 165,485 C 155,500 170,520 200,525 Z" />
-          <circle cx="145" cy="460" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="120" cy="395" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="95" cy="330" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="75" cy="255" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="68" cy="180" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="72" cy="110" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="92" cy="50" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+        <g id="laurel-left" fill="#009245" stroke="#006837" strokeWidth="1.2" strokeLinejoin="round">
+          <path d="M 255,555 C 215,550 170,520 135,475 C 155,475 175,465 180,448 C 150,455 125,438 105,408 C 125,408 145,395 150,378 C 120,385 95,360 80,325 C 100,325 120,312 125,295 C 95,302 70,272 58,232 C 78,232 98,220 102,202 C 72,202 52,168 45,128 C 65,132 82,122 88,105 C 65,100 50,70 50,38 C 68,50 88,50 100,38 C 82,20 75,-2 78,-25 C 98,-8 118,-2 135,-8 C 122,10 125,32 142,44 C 118,62 115,90 130,112 C 108,125 105,160 122,182 C 102,200 100,240 120,262 C 102,285 102,325 125,348 C 110,370 112,410 142,432 C 130,455 142,495 175,518 C 162,535 180,560 215,568 Z" transform="translate(15, 30)" />
+          
+          {/* Berries (Frutos rojos con brillo) */}
+          <g id="berries-left">
+            <circle cx="155" cy="510" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="152" cy="507" r="2.5" fill="#FFFFFF" opacity="0.8" />
+            
+            <circle cx="125" cy="435" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="122" cy="432" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="95" cy="360" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="92" cy="357" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="75" cy="275" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="72" cy="272" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="68" cy="190" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="65" cy="187" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="72" cy="115" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="69" cy="112" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="98" cy="48" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="95" cy="45" r="2.5" fill="#FFFFFF" opacity="0.8" />
+          </g>
         </g>
 
         {/* Right Laurel Branch */}
-        <g id="laurel-right-comp" fill="#009245" stroke="#006837" strokeWidth="1">
-          <path d="M 265,510 C 300,505 335,480 360,445 C 345,445 330,435 325,420 C 350,425 370,410 385,385 C 370,385 355,375 350,360 C 375,365 395,345 410,315 C 395,315 380,305 375,290 C 400,295 420,270 430,235 C 415,235 400,225 395,210 C 420,210 435,180 440,145 C 425,148 410,140 405,125 C 425,120 435,95 435,65 C 420,75 405,75 395,65 C 412,50 418,30 415,10 C 400,25 385,30 370,25 C 382,40 380,60 365,70 C 385,85 388,110 375,128 C 395,140 398,170 382,190 C 400,205 402,240 385,260 C 400,280 400,315 380,335 C 392,355 390,390 365,410 C 375,430 365,465 335,485 C 345,500 330,520 300,525 Z" />
-          <circle cx="355" cy="460" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="380" cy="395" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="405" cy="330" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="425" cy="255" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="432" cy="180" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="428" cy="110" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
-          <circle cx="408" cy="50" r="7.5" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+        <g id="laurel-right" fill="#009245" stroke="#006837" strokeWidth="1.2" strokeLinejoin="round">
+          <path d="M 285,555 C 325,550 370,520 405,475 C 385,475 365,465 360,448 C 390,455 415,438 435,408 C 415,408 395,395 390,378 C 420,385 445,360 460,325 C 440,325 420,312 415,295 C 445,302 470,272 482,232 C 462,232 442,220 438,202 C 468,202 488,168 495,128 C 475,132 458,122 452,105 C 475,100 490,70 490,38 C 472,50 452,50 440,38 C 458,20 465,-2 462,-25 C 442,-8 422,-2 405,-8 C 418,10 415,32 398,44 C 422,62 425,90 410,112 C 432,125 435,160 418,182 C 438,200 440,240 420,262 C 438,285 438,325 415,348 C 430,370 428,410 398,432 C 410,455 398,495 365,518 C 378,535 360,560 325,568 Z" transform="translate(-15, 30)" />
+          
+          {/* Berries (Frutos rojos con brillo) */}
+          <g id="berries-right">
+            <circle cx="385" cy="510" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="382" cy="507" r="2.5" fill="#FFFFFF" opacity="0.8" />
+            
+            <circle cx="415" cy="435" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="412" cy="432" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="445" cy="360" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="442" cy="357" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="465" cy="275" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="462" cy="272" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="472" cy="190" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="469" cy="187" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="468" cy="115" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="465" cy="112" r="2.5" fill="#FFFFFF" opacity="0.8" />
+
+            <circle cx="442" cy="48" r="9" fill="#E31B23" stroke="#B01219" strokeWidth="1" />
+            <circle cx="439" cy="45" r="2.5" fill="#FFFFFF" opacity="0.8" />
+          </g>
         </g>
 
-        {/* Outer Blue Ring */}
-        <ellipse cx="250" cy="265" rx="190" ry="245" fill="#1C3F94" stroke="#122B68" strokeWidth="2" />
+        {/* 2. Outer Royal Blue Oval Ring */}
+        <ellipse 
+          cx="270" 
+          cy="295" 
+          rx="205" 
+          ry="265" 
+          fill="#16378C" 
+          stroke="#0F2664" 
+          strokeWidth="2.5" 
+        />
 
-        {/* Inner Red Oval */}
-        <ellipse cx="250" cy="265" rx="142" ry="195" fill="#E31B23" stroke="#B31219" strokeWidth="2" />
+        {/* 3. Inner Red Oval */}
+        <ellipse 
+          cx="270" 
+          cy="295" 
+          rx="155" 
+          ry="212" 
+          fill="#E31B23" 
+          stroke="#B01219" 
+          strokeWidth="2" 
+        />
 
-        {/* White Text on Blue Ring */}
-        <text fill="#FFFFFF" fontFamily="'Arial Black', 'Trebuchet MS', Arial, sans-serif" fontWeight="900" fontSize="14.5" letterSpacing="1.1">
-          <textPath href="#pathBlueTextTopComp" startOffset="50%" textAnchor="middle">
+        {/* 4. White Curved Faculty Name on Blue Ring */}
+        <text 
+          fill="#FFFFFF" 
+          fontFamily="'Arial Black', 'Trebuchet MS', Arial, sans-serif" 
+          fontWeight="900" 
+          fontSize="15" 
+          letterSpacing="1.2"
+        >
+          <textPath href="#pathCurvedTextFacultad" startOffset="50%" textAnchor="middle">
             FACULTAD DE CIENCIAS CONTABLES, AUDITORIA, SISTEMA DE CONTROL DE GESTIÓN Y FINANZAS
           </textPath>
         </text>
 
-        {/* Gold Wings */}
-        <g id="wings-comp" fill="#FFCC00" stroke="#C69200" strokeWidth="1.2">
-          <path d="M 250,118 Q 210,80 160,105 Q 190,135 215,135 Q 235,130 250,125 Z" />
-          <path d="M 230,110 L 180,105 M 240,118 L 195,120 M 245,122 L 210,130" stroke="#B28000" strokeWidth="1" fill="none" />
-          <path d="M 200,95 L 205,125 M 180,105 L 190,125 M 220,95 L 225,128" stroke="#B28000" strokeWidth="1" fill="none" />
+        {/* 5. Golden Caduceus Wings with Grid Hatching */}
+        <g id="wings-gold" filter="url(#subtleShadow)">
+          {/* Left Wing */}
+          <path 
+            d="M 270,135 Q 220,90 165,120 Q 200,158 230,155 Q 255,150 270,142 Z" 
+            fill="url(#goldWingGrad)" 
+            stroke="#B57C00" 
+            strokeWidth="1.5" 
+          />
+          {/* Left Wing Grid Lines */}
+          <path d="M 245,125 L 190,118 M 255,135 L 205,138 M 262,142 L 225,150" stroke="#8C5F00" strokeWidth="1.2" fill="none" />
+          <path d="M 215,108 L 220,145 M 190,120 L 202,145 M 240,108 L 245,150" stroke="#8C5F00" strokeWidth="1.2" fill="none" />
 
-          <path d="M 250,118 Q 290,80 340,105 Q 310,135 285,135 Q 265,130 250,125 Z" />
-          <path d="M 270,110 L 320,105 M 260,118 L 305,120 M 255,122 L 290,130" stroke="#B28000" strokeWidth="1" fill="none" />
-          <path d="M 300,95 L 295,125 M 320,105 L 310,125 M 280,95 L 275,128" stroke="#B28000" strokeWidth="1" fill="none" />
+          {/* Right Wing */}
+          <path 
+            d="M 270,135 Q 320,90 375,120 Q 340,158 310,155 Q 285,150 270,142 Z" 
+            fill="url(#goldWingGrad)" 
+            stroke="#B57C00" 
+            strokeWidth="1.5" 
+          />
+          {/* Right Wing Grid Lines */}
+          <path d="M 295,125 L 350,118 M 285,135 L 335,138 M 278,142 L 315,150" stroke="#8C5F00" strokeWidth="1.2" fill="none" />
+          <path d="M 325,108 L 320,145 M 350,120 L 338,145 M 300,108 L 295,150" stroke="#8C5F00" strokeWidth="1.2" fill="none" />
         </g>
 
-        {/* Central Staff Line and Sphere */}
-        <line x1="250" y1="85" x2="250" y2="280" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
-        <circle cx="250" cy="85" r="9" fill="#FFFFFF" stroke="#CCCCCC" strokeWidth="1.5" />
+        {/* 6. Central Caduceus Staff with White Sphere */}
+        <line x1="270" y1="100" x2="270" y2="310" stroke="#FFFFFF" strokeWidth="5.5" strokeLinecap="round" />
+        <circle cx="270" cy="100" r="10" fill="#FFFFFF" stroke="#D1D5DB" strokeWidth="1.5" />
+        <circle cx="267" cy="97" r="3" fill="#FFFFFF" />
 
-        {/* Open Book */}
-        <g id="book-comp">
-          <path d="M 152,148 Q 200,140 248,154 Q 296,140 348,148 L 348,248 Q 296,240 248,254 Q 200,240 152,248 Z" fill="#000000" opacity="0.25" transform="translate(0, 3)" />
-          <path d="M 150,148 L 150,248 Q 200,240 248,254 Q 296,240 346,248 L 346,148 Q 296,140 248,154 Q 200,140 150,148 Z" fill="#EAEAEA" stroke="#333333" strokeWidth="2.5" />
-          <path d="M 154,150 L 154,242 Q 200,235 248,248 Q 296,235 342,242 L 342,150 Q 296,143 248,156 Q 200,143 154,150 Z" fill="#FFFFFF" stroke="#222222" strokeWidth="1.5" />
-          <line x1="248" y1="156" x2="248" y2="248" stroke="#555555" strokeWidth="2" />
-          <path d="M 168,170 Q 205,165 238,172 M 168,185 Q 205,180 238,187 M 168,200 Q 205,195 238,202 M 168,215 Q 205,210 238,217" stroke="#BBBBBB" strokeWidth="1.5" fill="none" />
-          <path d="M 258,172 Q 290,165 328,170 M 258,187 Q 290,180 328,185 M 258,202 Q 290,195 328,200 M 258,217 Q 290,210 328,215" stroke="#BBBBBB" strokeWidth="1.5" fill="none" />
+        {/* 7. Open White Book */}
+        <g id="open-book" filter="url(#subtleShadow)">
+          {/* Book Shadow */}
+          <path 
+            d="M 162,168 Q 215,160 268,175 Q 321,160 378,168 L 378,280 Q 321,272 268,287 Q 215,272 162,280 Z" 
+            fill="#000000" 
+            opacity="0.3" 
+            transform="translate(0, 4)" 
+          />
+          {/* Book Base (Pages Edge) */}
+          <path 
+            d="M 160,168 L 160,278 Q 215,270 268,285 Q 321,270 376,278 L 376,168 Q 321,160 268,175 Q 215,160 160,168 Z" 
+            fill="#F3F4F6" 
+            stroke="#1F2937" 
+            strokeWidth="2.5" 
+          />
+          {/* Book Cover White Surface */}
+          <path 
+            d="M 164,170 L 164,272 Q 215,264 268,279 Q 321,264 372,272 L 372,170 Q 321,163 268,177 Q 215,163 164,170 Z" 
+            fill="#FFFFFF" 
+            stroke="#111827" 
+            strokeWidth="1.5" 
+          />
+          {/* Central Spine Line */}
+          <line x1="268" y1="177" x2="268" y2="283" stroke="#4B5563" strokeWidth="2.2" />
+
+          {/* Left Pages Lines */}
+          <path d="M 180,192 Q 220,186 256,194 M 180,208 Q 220,202 256,210 M 180,224 Q 220,218 256,226 M 180,240 Q 220,234 256,242 M 180,256 Q 220,250 256,258" stroke="#9CA3AF" strokeWidth="1.5" fill="none" />
+          {/* Right Pages Lines */}
+          <path d="M 280,194 Q 316,186 356,192 M 280,210 Q 316,202 356,208 M 280,226 Q 316,218 356,224 M 280,242 Q 316,234 356,240 M 280,258 Q 316,250 356,256" stroke="#9CA3AF" strokeWidth="1.5" fill="none" />
         </g>
 
-        {/* Caduceus Serpents */}
-        <g id="serpents-comp" fill="#FFFFFF" stroke="#1A1A1A" strokeWidth="2">
-          {/* Left Snake */}
-          <path d="M 242,145 Q 230,135 218,142 Q 212,152 222,160 Q 235,162 244,155 Z" />
-          <circle cx="225" cy="147" r="1.8" fill="#1A1A1A" />
-          <path d="M 242,155 Q 220,175 230,195 Q 242,215 255,205 Q 268,195 252,175 Q 242,162 242,155 Z" />
-          <path d="M 250,205 Q 230,225 240,245 Q 250,265 250,278 L 248,278 Q 246,260 232,242 Q 222,222 245,205 Z" />
+        {/* 8. White Serpents Entwined on the Staff */}
+        <g id="caduceus-serpents" fill="#FFFFFF" stroke="#111827" strokeWidth="2.2" strokeLinejoin="round">
+          {/* Left Serpent Head */}
+          <path d="M 261,162 Q 248,150 234,158 Q 228,168 238,178 Q 252,180 263,172 Z" />
+          <circle cx="242" cy="164" r="2.2" fill="#111827" />
 
-          {/* Right Snake */}
-          <path d="M 258,145 Q 270,135 282,142 Q 288,152 278,160 Q 265,162 256,155 Z" />
-          <circle cx="275" cy="147" r="1.8" fill="#1A1A1A" />
-          <path d="M 258,155 Q 280,175 270,195 Q 258,215 245,205 Q 232,195 248,175 Q 258,162 258,155 Z" />
-          <path d="M 250,205 Q 270,225 260,245 Q 250,265 250,278 L 252,278 Q 254,260 268,242 Q 278,222 255,205 Z" />
+          {/* Left Serpent Coils */}
+          <path d="M 261,173 Q 236,195 248,220 Q 262,242 276,230 Q 290,218 272,195 Q 261,180 261,173 Z" />
+          <path d="M 270,230 Q 248,252 260,274 Q 270,296 270,310 L 267,310 Q 264,290 250,270 Q 238,248 264,230 Z" />
+
+          {/* Right Serpent Head */}
+          <path d="M 279,162 Q 292,150 306,158 Q 312,168 302,178 Q 288,180 277,172 Z" />
+          <circle cx="298" cy="164" r="2.2" fill="#111827" />
+
+          {/* Right Serpent Coils */}
+          <path d="M 279,173 Q 304,195 292,220 Q 278,242 264,230 Q 250,218 268,195 Q 279,180 279,173 Z" />
+          <path d="M 270,230 Q 292,252 280,274 Q 270,296 270,310 L 273,310 Q 276,290 290,270 Q 302,248 276,230 Z" />
         </g>
 
-        <line x1="250" y1="248" x2="250" y2="280" stroke="#FFFFFF" strokeWidth="4.5" strokeLinecap="round" />
+        {/* Lower Staff Tip */}
+        <line x1="270" y1="280" x2="270" y2="315" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
 
-        {/* UAGRM & City Text */}
-        <g id="uagrm-text-comp">
-          <text x="250" y="325" textAnchor="middle" fontFamily="'Arial Black', Impact, Arial, sans-serif" fontWeight="900" fontSize="36" fill="#FFFFFF" letterSpacing="1.5">
+        {/* 9. UAGRM & SANTA CRUZ - BOLIVIA Typography */}
+        <g id="uagrm-text" filter="url(#subtleShadow)">
+          <text 
+            x="270" 
+            y="368" 
+            textAnchor="middle" 
+            fontFamily="'Arial Black', Impact, 'Trebuchet MS', sans-serif" 
+            fontWeight="900" 
+            fontSize="46" 
+            fill="#FFFFFF" 
+            letterSpacing="2"
+          >
             UAGRM
           </text>
-          <text x="250" y="352" textAnchor="middle" fontFamily="'Arial Black', Arial, sans-serif" fontWeight="800" fontSize="13" fill="#FFFFFF" letterSpacing="0.8">
+          <text 
+            x="270" 
+            y="398" 
+            textAnchor="middle" 
+            fontFamily="'Arial Black', 'Trebuchet MS', Arial, sans-serif" 
+            fontWeight="900" 
+            fontSize="15" 
+            fill="#FFFFFF" 
+            letterSpacing="1"
+          >
             SANTA CRUZ - BOLIVIA
           </text>
         </g>

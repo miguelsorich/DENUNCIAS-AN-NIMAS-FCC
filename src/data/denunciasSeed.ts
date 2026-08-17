@@ -1,72 +1,7 @@
 import { ReporteInasistencia, DenunciaVarias } from '../types';
 
-export const REPORTES_INASISTENCIA_INICIALES: ReporteInasistencia[] = [
-  {
-    id: 'rep-seed-101',
-    claseId: 'adm100-a-mar',
-    sigla: 'ADM100',
-    grupo: 'A',
-    nombreMateria: 'ADMINISTRACION',
-    docente: 'AZOGUE CHAVEZ OSCAR MARCELO',
-    dia: 'Martes',
-    horario: '07:00 - 09:15',
-    aula: 'AUL-201',
-    inasistenciaMarcada: true,
-    comentario: 'El docente no llegó a clase y no envió ningún aviso de suspensión.',
-    fechaReporte: 'Lunes, 11 de agosto de 2026, 07:45',
-    esAnonimo: true,
-  },
-  {
-    id: 'rep-seed-102',
-    claseId: 'inf110-sb-lun',
-    sigla: 'INF110',
-    grupo: 'SB',
-    nombreMateria: 'INTRODUCCION A LA INFORMATICA',
-    docente: 'CONTRERAS VEIZAGA JUAN CARLOS',
-    dia: 'Lunes',
-    horario: '09:15 - 11:30',
-    aula: 'LAB-COMP-1',
-    inasistenciaMarcada: true,
-    comentario: 'Se esperó más de 30 minutos en el laboratorio pero el docente no se presentó.',
-    fechaReporte: 'Lunes, 11 de agosto de 2026, 09:50',
-    esAnonimo: true,
-  },
-  {
-    id: 'rep-seed-103',
-    claseId: 'mat101-sa-mie',
-    sigla: 'MAT101',
-    grupo: 'SA',
-    nombreMateria: 'CALCULO I',
-    docente: 'PINTO VARGAS CARMEN ROSA',
-    dia: 'Miércoles',
-    horario: '14:00 - 16:15',
-    aula: 'AUL-102',
-    inasistenciaMarcada: true,
-    fechaReporte: 'Miércoles, 13 de agosto de 2026, 14:35',
-    esAnonimo: true,
-  },
-];
+// Colecciones iniciales limpias (sin datos de prueba)
+export const REPORTES_INASISTENCIA_INICIALES: ReporteInasistencia[] = [];
 
-export const DENUNCIAS_VARIAS_INICIALES: DenunciaVarias[] = [
-  {
-    id: 'den-seed-201',
-    tipoDenuncia: 'Obligar a asistir a seminarios',
-    comentario: 'El docente de la materia indicó que la asistencia a un seminario externo de Bs. 80 es obligatoria para tener derecho al 2do parcial.',
-    fechaRegistro: 'Martes, 12 de agosto de 2026, 10:15',
-    esAnonimo: true,
-  },
-  {
-    id: 'den-seed-202',
-    tipoDenuncia: 'Obligar a comprar libros',
-    comentario: 'Se condicionó la entrega de trabajos prácticos a la compra obligatoria de un compendio impreso vendido exclusivamente por el docente.',
-    fechaRegistro: 'Miércoles, 13 de agosto de 2026, 16:40',
-    esAnonimo: true,
-  },
-  {
-    id: 'den-seed-203',
-    tipoDenuncia: 'Otros',
-    comentario: 'Cambio arbitrario de la ponderación de notas acordada en el programa analítico al inicio del semestre sin justificación.',
-    fechaRegistro: 'Jueves, 14 de agosto de 2026, 11:20',
-    esAnonimo: true,
-  },
-];
+export const DENUNCIAS_VARIAS_INICIALES: DenunciaVarias[] = [];
+
