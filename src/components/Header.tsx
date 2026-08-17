@@ -1,5 +1,6 @@
 import React from 'react';
-import { Shield, GraduationCap, Settings, Layers, BookOpen, ShieldAlert } from 'lucide-react';
+import { Shield, Layers, BookOpen } from 'lucide-react';
+import { LogoFacultad } from './LogoFacultad';
 
 export type ModuloActivo = 'inasistencia' | 'denuncias-varias' | 'admin';
 
@@ -16,17 +17,16 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-xs">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
-              <GraduationCap className="w-6 h-6" />
-            </div>
+          <div className="flex items-center gap-3 sm:gap-3.5">
+            {/* Logo Oficial de la Facultad */}
+            <LogoFacultad className="w-11 h-13 sm:w-12 sm:h-14 shrink-0" />
             <div>
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight tracking-tight">
-                Voz Anónima
+                Voz Anónima-FCC
               </h1>
-              <p className="text-xs font-semibold text-blue-900 leading-none mt-0.5">
+              <p className="text-xs sm:text-[13px] font-bold text-blue-900 leading-none mt-0.5">
                 Habla con confianza
               </p>
             </div>
