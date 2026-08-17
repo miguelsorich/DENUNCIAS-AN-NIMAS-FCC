@@ -15,19 +15,35 @@ import {
   FileCheck2,
   Filter,
   X,
-  GraduationCap
+  GraduationCap,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 
 interface AdminRevisionDenunciasProps {
   reportesInasistencia: ReporteInasistencia[];
   denunciasVarias: DenunciaVarias[];
+  onEliminarInasistencia?: (id: string) => void;
+  onEliminarDenunciaVarias?: (id: string) => void;
+  onLimpiarTodasInasistencias?: () => void;
+  onLimpiarTodasDenunciasVarias?: () => void;
 }
 
 export type SubpestanaRevision = 'inasistencias' | 'denuncias-varias';
 
+interface ElementoAEliminar {
+  tipo: 'inasistencia' | 'denuncia-varias' | 'todas-inasistencias' | 'todas-denuncias';
+  id?: string;
+  descripcion: string;
+}
+
 export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
   reportesInasistencia,
   denunciasVarias,
+  onEliminarInasistencia,
+  onEliminarDenunciaVarias,
+  onLimpiarTodasInasistencias,
+  onLimpiarTodasDenunciasVarias,
 }) => {
   const [subpestana, setSubpestana] = useState<SubpestanaRevision>('inasistencias');
   
@@ -37,6 +53,9 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
   // Filtros para Denuncias Varias
   const [filtroTipoDenuncia, setFiltroTipoDenuncia] = useState<string>('TODOS');
   const [busquedaDenunciasVarias, setBusquedaDenunciasVarias] = useState<string>('');
+
+  // Estado para el modal de confirmación de eliminación
+  const [elementoAEliminar, setElementoAEliminar] = useState<ElementoAEliminar | null>(null);
 
   // Filtrado de inasistencias
   const inasistenciasFiltradas = useMemo(() => {
@@ -97,6 +116,22 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
     });
   }, [denunciasVarias, filtroTipoDenuncia, busquedaDenunciasVarias]);
 
+  const handleEjecutarEliminacion = () => {
+    if (!elementoAEliminar) return;
+
+    if (elementoAEliminar.tipo === 'inasistencia' && elementoAEliminar.id && onEliminarInasistencia) {
+      onEliminarInasistencia(elementoAEliminar.id);
+    } else if (elementoAEliminar.tipo === 'denuncia-varias' && elementoAEliminar.id && onEliminarDenunciaVarias) {
+      onEliminarDenunciaVarias(elementoAEliminar.id);
+    } else if (elementoAEliminar.tipo === 'todas-inasistencias' && onLimpiarTodasInasistencias) {
+      onLimpiarTodasInasistencias();
+    } else if (elementoAEliminar.tipo === 'todas-denuncias' && onLimpiarTodasDenunciasVarias) {
+      onLimpiarTodasDenunciasVarias();
+    }
+
+    setElementoAEliminar(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Encabezado Principal del Módulo de Revisión */}
@@ -129,48 +164,79 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
         </div>
 
         {/* Selector de subpestañas: 1. Inasistencias docentes | 2. Denuncias varias */}
-        <div className="flex items-center gap-2 pt-1 border-b border-slate-200">
-          <button
-            type="button"
-            id="subtab-inasistencias-docentes"
-            onClick={() => setSubpestana('inasistencias')}
-            className={`pb-3 px-4 text-sm sm:text-base font-bold transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
-              subpestana === 'inasistencias'
-                ? 'border-blue-900 text-blue-900'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-            }`}
-          >
-            <UserX className="w-4 h-4" />
-            <span>Inasistencias docentes</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-              subpestana === 'inasistencias' 
-                ? 'bg-blue-100 text-blue-900' 
-                : 'bg-slate-100 text-slate-600'
-            }`}>
-              {reportesInasistencia.length}
-            </span>
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-b border-slate-200">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              id="subtab-inasistencias-docentes"
+              onClick={() => setSubpestana('inasistencias')}
+              className={`pb-3 px-4 text-sm sm:text-base font-bold transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+                subpestana === 'inasistencias'
+                  ? 'border-blue-900 text-blue-900'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+              }`}
+            >
+              <UserX className="w-4 h-4" />
+              <span>Inasistencias docentes</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                subpestana === 'inasistencias' 
+                  ? 'bg-blue-100 text-blue-900' 
+                  : 'bg-slate-100 text-slate-600'
+              }`}>
+                {reportesInasistencia.length}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            id="subtab-denuncias-varias"
-            onClick={() => setSubpestana('denuncias-varias')}
-            className={`pb-3 px-4 text-sm sm:text-base font-bold transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
-              subpestana === 'denuncias-varias'
-                ? 'border-blue-900 text-blue-900'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-            }`}
-          >
-            <Layers className="w-4 h-4" />
-            <span>Denuncias varias</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-              subpestana === 'denuncias-varias' 
-                ? 'bg-blue-100 text-blue-900' 
-                : 'bg-slate-100 text-slate-600'
-            }`}>
-              {denunciasVarias.length}
-            </span>
-          </button>
+            <button
+              type="button"
+              id="subtab-denuncias-varias"
+              onClick={() => setSubpestana('denuncias-varias')}
+              className={`pb-3 px-4 text-sm sm:text-base font-bold transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+                subpestana === 'denuncias-varias'
+                  ? 'border-blue-900 text-blue-900'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>Denuncias varias</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                subpestana === 'denuncias-varias' 
+                  ? 'bg-blue-100 text-blue-900' 
+                  : 'bg-slate-100 text-slate-600'
+              }`}>
+                {denunciasVarias.length}
+              </span>
+            </button>
+          </div>
+
+          {/* Botón de limpieza masiva para pruebas si hay elementos */}
+          {subpestana === 'inasistencias' && reportesInasistencia.length > 0 && onLimpiarTodasInasistencias && (
+            <button
+              type="button"
+              onClick={() => setElementoAEliminar({
+                tipo: 'todas-inasistencias',
+                descripcion: `Todos los ${reportesInasistencia.length} reportes de inasistencia docente actualmente registrados.`
+              })}
+              className="mb-2 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 hover:text-red-800 border border-red-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Limpiar todas las inasistencias</span>
+            </button>
+          )}
+
+          {subpestana === 'denuncias-varias' && denunciasVarias.length > 0 && onLimpiarTodasDenunciasVarias && (
+            <button
+              type="button"
+              onClick={() => setElementoAEliminar({
+                tipo: 'todas-denuncias',
+                descripcion: `Todas las ${denunciasVarias.length} denuncias varias actualmente registradas.`
+              })}
+              className="mb-2 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 hover:text-red-800 border border-red-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Limpiar todas las denuncias</span>
+            </button>
+          )}
         </div>
       </section>
 
@@ -259,19 +325,21 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="font-semibold text-slate-700 capitalize">
-                        {reporte.fechaReporte}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="font-semibold text-slate-700 capitalize">
+                          {reporte.fechaReporte}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Datos detallados fidedignos de la clase del Maestro de Oferta */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 text-xs bg-slate-50/80 p-4 rounded-xl border border-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 text-xs bg-slate-50/80 p-4 rounded-xl border border-slate-200 items-center">
                     <div>
                       <span className="text-slate-400 uppercase font-semibold block text-[11px]">
-                        Docente:
+                        DOCENTE:
                       </span>
                       <strong className="text-slate-900 text-sm block mt-0.5">
                         {reporte.docente}
@@ -280,7 +348,7 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
 
                     <div>
                       <span className="text-slate-400 uppercase font-semibold block text-[11px]">
-                        Día:
+                        DÍA:
                       </span>
                       <div className="flex items-center gap-1 text-slate-800 font-medium mt-0.5 text-xs sm:text-sm">
                         <Calendar className="w-3.5 h-3.5 text-blue-800" />
@@ -290,7 +358,7 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
 
                     <div>
                       <span className="text-slate-400 uppercase font-semibold block text-[11px]">
-                        Horario:
+                        HORARIO:
                       </span>
                       <div className="flex items-center gap-1 text-slate-800 font-mono font-medium mt-0.5 text-xs sm:text-sm">
                         <Clock className="w-3.5 h-3.5 text-blue-800" />
@@ -298,14 +366,34 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
                       </div>
                     </div>
 
-                    <div>
-                      <span className="text-slate-400 uppercase font-semibold block text-[11px]">
-                        Aula:
-                      </span>
-                      <div className="flex items-center gap-1 text-slate-800 font-medium mt-0.5 text-xs sm:text-sm">
-                        <MapPin className="w-3.5 h-3.5 text-blue-800" />
-                        <span className="font-bold">{reporte.aula}</span>
+                    {/* Aula y Botón de Limpiar / Borrar */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <span className="text-slate-400 uppercase font-semibold block text-[11px]">
+                          AULA:
+                        </span>
+                        <div className="flex items-center gap-1 text-slate-800 font-medium mt-0.5 text-xs sm:text-sm">
+                          <MapPin className="w-3.5 h-3.5 text-blue-800" />
+                          <span className="font-bold">{reporte.aula}</span>
+                        </div>
                       </div>
+
+                      {/* Icono / Botón para borrar o limpiar reporte de prueba */}
+                      {onEliminarInasistencia && (
+                        <button
+                          type="button"
+                          onClick={() => setElementoAEliminar({
+                            tipo: 'inasistencia',
+                            id: reporte.id,
+                            descripcion: `Inasistencia de ${reporte.docente} (${reporte.sigla} Gr. ${reporte.grupo} - Aula ${reporte.aula})`
+                          })}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 hover:border-red-300 font-bold text-xs transition-all cursor-pointer shadow-2xs shrink-0"
+                          title="Borrar o limpiar este reporte de prueba"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                          <span>limpiar</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -465,55 +553,76 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="font-semibold text-slate-700 capitalize">
-                          {denuncia.fechaRegistro}
-                        </span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="font-semibold text-slate-700 capitalize">
+                            {denuncia.fechaRegistro}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Información de la Clase / Docente denunciado */}
                     <div className="bg-slate-50/90 p-4 rounded-xl border border-slate-200 space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-900 flex items-center justify-center shrink-0 mt-0.5">
-                          <GraduationCap className="w-4 h-4" />
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-900 flex items-center justify-center shrink-0 mt-0.5">
+                            <GraduationCap className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-slate-400 uppercase font-semibold block text-[11px]">
+                              DOCENTE:
+                            </span>
+                            <strong className="text-slate-900 text-sm sm:text-base block">
+                              {docenteVal ? (
+                                docenteVal
+                              ) : (
+                                <span className="text-slate-500 font-normal italic">No especificado</span>
+                              )}
+                            </strong>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <span className="text-slate-400 uppercase font-semibold block text-[11px]">
-                            Docente:
-                          </span>
-                          <strong className="text-slate-900 text-sm sm:text-base block">
-                            {docenteVal ? (
-                              docenteVal
-                            ) : (
-                              <span className="text-slate-500 font-normal italic">No especificado</span>
-                            )}
-                          </strong>
-                        </div>
+
+                        {/* Icono / Botón para borrar o limpiar denuncia de prueba */}
+                        {onEliminarDenunciaVarias && (
+                          <button
+                            type="button"
+                            onClick={() => setElementoAEliminar({
+                              tipo: 'denuncia-varias',
+                              id: denuncia.id,
+                              descripcion: `Denuncia por "${denuncia.tipoDenuncia}" contra ${docenteVal || 'Docente no especificado'}`
+                            })}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 hover:border-red-300 font-bold text-xs transition-all cursor-pointer shadow-2xs shrink-0"
+                            title="Borrar o limpiar este reporte de prueba"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                            <span>borrar o limpiar</span>
+                          </button>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-2 border-t border-slate-200/80 text-xs">
                         <div className="col-span-2 sm:col-span-3 md:col-span-2">
-                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">Materia:</span>
+                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">MATERIA:</span>
                           <span className="font-bold text-slate-900">
                             {denuncia.nombreMateria || <span className="text-slate-400 font-normal italic">No especificado</span>}
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">Sigla:</span>
+                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">SIGLA:</span>
                           <span className="font-mono font-bold text-blue-900">
                             {denuncia.sigla || <span className="text-slate-400 font-normal italic">No especificado</span>}
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">Grupo:</span>
+                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">GRUPO:</span>
                           <span className="font-bold text-slate-900">
                             {denuncia.grupo || <span className="text-slate-400 font-normal italic">No especificado</span>}
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">Día / Horario:</span>
+                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">DÍA / HORARIO:</span>
                           <span className="text-slate-800 font-medium block">
                             {denuncia.dia ? `${denuncia.dia} ${denuncia.horario ? `(${denuncia.horario})` : ''}` : (
                               <span className="text-slate-400 font-normal italic">No especificado</span>
@@ -521,7 +630,7 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">Aula:</span>
+                          <span className="text-slate-400 block text-[11px] uppercase font-semibold">AULA:</span>
                           <span className="text-slate-800 font-medium">
                             {denuncia.aula || <span className="text-slate-400 font-normal italic">No especificado</span>}
                           </span>
@@ -532,7 +641,7 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
                     {/* Comentario o descripción */}
                     <div className="space-y-1">
                       <span className="text-slate-400 uppercase font-semibold block text-[11px]">
-                        Comentario o descripción:
+                        COMENTARIO O DESCRIPCIÓN:
                       </span>
                       {denuncia.comentario ? (
                         <p className="text-xs sm:text-sm text-slate-800 bg-slate-50 p-4 rounded-xl border border-slate-200 whitespace-pre-wrap leading-relaxed">
@@ -550,6 +659,52 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
             </div>
           )}
         </section>
+      )}
+
+      {/* Modal de confirmación para eliminar o limpiar reportes */}
+      {elementoAEliminar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-slate-900">
+                  ¿Borrar o limpiar este reporte?
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  {elementoAEliminar.descripcion}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900">
+              <p className="font-medium">
+                Esta acción eliminará el registro de forma permanente de la base de datos y del panel administrativo.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setElementoAEliminar(null)}
+                className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={handleEjecutarEliminacion}
+                className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Sí, borrar registro</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

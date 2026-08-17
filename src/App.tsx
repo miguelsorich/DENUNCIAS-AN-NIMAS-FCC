@@ -21,8 +21,10 @@ import {
   saveMaestroOfertaSupabase,
   fetchReportesInasistenciaSupabase,
   insertReporteInasistenciaSupabase,
+  deleteReporteInasistenciaSupabase,
   fetchDenunciasVariasSupabase,
   insertDenunciaVariasSupabase,
+  deleteDenunciaVariasSupabase,
   SupabaseStatus,
 } from './services/supabaseService';
 
@@ -206,6 +208,19 @@ export default function App() {
           });
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'reportes_inasistencia' },
+        (payload) => {
+          setReportesInasistencia((prev) => {
+            const updated = prev.filter((item) => item.id !== payload.old.id);
+            try {
+              localStorage.setItem(STORAGE_KEY_INASISTENCIAS, JSON.stringify(updated));
+            } catch {}
+            return updated;
+          });
+        }
+      )
       .subscribe();
 
     const channelDenuncias = supabase
@@ -234,6 +249,19 @@ export default function App() {
           setDenunciasVarias((prev) => {
             if (prev.some((item) => item.id === nueva.id)) return prev;
             const updated = [nueva, ...prev];
+            try {
+              localStorage.setItem(STORAGE_KEY_DENUNCIAS_VARIAS, JSON.stringify(updated));
+            } catch {}
+            return updated;
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'denuncias_varias' },
+        (payload) => {
+          setDenunciasVarias((prev) => {
+            const updated = prev.filter((item) => item.id !== payload.old.id);
             try {
               localStorage.setItem(STORAGE_KEY_DENUNCIAS_VARIAS, JSON.stringify(updated));
             } catch {}
@@ -304,6 +332,50 @@ export default function App() {
     insertDenunciaVariasSupabase(nuevaDenuncia);
   };
 
+  const handleEliminarInasistencia = async (id: string) => {
+    setReportesInasistencia((prev) => {
+      const actualizados = prev.filter((r) => r.id !== id);
+      try {
+        localStorage.setItem(STORAGE_KEY_INASISTENCIAS, JSON.stringify(actualizados));
+      } catch {}
+      return actualizados;
+    });
+    await deleteReporteInasistenciaSupabase(id);
+  };
+
+  const handleEliminarDenunciaVarias = async (id: string) => {
+    setDenunciasVarias((prev) => {
+      const actualizados = prev.filter((d) => d.id !== id);
+      try {
+        localStorage.setItem(STORAGE_KEY_DENUNCIAS_VARIAS, JSON.stringify(actualizados));
+      } catch {}
+      return actualizados;
+    });
+    await deleteDenunciaVariasSupabase(id);
+  };
+
+  const handleLimpiarTodasInasistencias = async () => {
+    const ids = reportesInasistencia.map(r => r.id);
+    setReportesInasistencia([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY_INASISTENCIAS);
+    } catch {}
+    for (const id of ids) {
+      await deleteReporteInasistenciaSupabase(id);
+    }
+  };
+
+  const handleLimpiarTodasDenunciasVarias = async () => {
+    const ids = denunciasVarias.map(d => d.id);
+    setDenunciasVarias([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY_DENUNCIAS_VARIAS);
+    } catch {}
+    for (const id of ids) {
+      await deleteDenunciaVariasSupabase(id);
+    }
+  };
+
   const totalDenunciasTotales = reportesInasistencia.length + denunciasVarias.length;
 
   return (
@@ -338,6 +410,10 @@ export default function App() {
               onGuardarMaestro={handleGuardarMaestro}
               reportesInasistencia={reportesInasistencia}
               denunciasVarias={denunciasVarias}
+              onEliminarInasistencia={handleEliminarInasistencia}
+              onEliminarDenunciaVarias={handleEliminarDenunciaVarias}
+              onLimpiarTodasInasistencias={handleLimpiarTodasInasistencias}
+              onLimpiarTodasDenunciasVarias={handleLimpiarTodasDenunciasVarias}
               onVolverEstudiante={() => setPortalActivo('estudiante')}
             />
           ) : (

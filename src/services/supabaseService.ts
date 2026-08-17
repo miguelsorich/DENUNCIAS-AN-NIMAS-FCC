@@ -291,3 +291,40 @@ export async function insertDenunciaVariasSupabase(denuncia: DenunciaVarias): Pr
     return false;
   }
 }
+
+export async function deleteReporteInasistenciaSupabase(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('reportes_inasistencia')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.warn('Error al eliminar reporte de inasistencia en Supabase:', error.message);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn('Excepción al eliminar reporte de inasistencia en Supabase:', e);
+    return false;
+  }
+}
+
+export async function deleteDenunciaVariasSupabase(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('denuncias_varias')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.warn('Error al eliminar denuncia varias en Supabase:', error.message);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn('Excepción al eliminar denuncia varias en Supabase:', e);
+    return false;
+  }
+}
+

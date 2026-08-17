@@ -21,6 +21,10 @@ interface AdminPanelProps {
   onGuardarMaestro: (nuevoMaestro: MaestroOfertaVigente) => void;
   reportesInasistencia: ReporteInasistencia[];
   denunciasVarias: DenunciaVarias[];
+  onEliminarInasistencia?: (id: string) => void;
+  onEliminarDenunciaVarias?: (id: string) => void;
+  onLimpiarTodasInasistencias?: () => void;
+  onLimpiarTodasDenunciasVarias?: () => void;
   onVolverEstudiante?: () => void;
 }
 
@@ -31,6 +35,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onGuardarMaestro,
   reportesInasistencia,
   denunciasVarias,
+  onEliminarInasistencia,
+  onEliminarDenunciaVarias,
+  onLimpiarTodasInasistencias,
+  onLimpiarTodasDenunciasVarias,
   onVolverEstudiante,
 }) => {
   const [seccionAdmin, setSeccionAdmin] = useState<SeccionAdmin>('revision-denuncias');
@@ -156,6 +164,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <AdminRevisionDenuncias
           reportesInasistencia={reportesInasistencia}
           denunciasVarias={denunciasVarias}
+          onEliminarInasistencia={onEliminarInasistencia}
+          onEliminarDenunciaVarias={onEliminarDenunciaVarias}
+          onLimpiarTodasInasistencias={onLimpiarTodasInasistencias}
+          onLimpiarTodasDenunciasVarias={onLimpiarTodasDenunciasVarias}
         />
       )}
 
