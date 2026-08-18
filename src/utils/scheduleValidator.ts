@@ -17,16 +17,6 @@ export interface ScheduleValidationResult {
   mensaje: string;
 }
 
-const DIAS_MAP: Record<number, string[]> = {
-  0: ['DOMINGO', 'DOM', 'DO'],
-  1: ['LUNES', 'LUN', 'LU'],
-  2: ['MARTES', 'MAR', 'MA'],
-  3: ['MIERCOLES', 'MIÉRCOLES', 'MIER', 'MIE', 'MI'],
-  4: ['JUEVES', 'JUEV', 'JUE', 'JU'],
-  5: ['VIERNES', 'VIER', 'VIE', 'VI'],
-  6: ['SABADO', 'SÁBADO', 'SAB', 'SA'],
-};
-
 const NOMBRES_DIAS: Record<number, string> = {
   0: 'Domingo',
   1: 'Lunes',
@@ -49,46 +39,175 @@ function normalizarTexto(txt: string): string {
 }
 
 /**
- * Verifica si el día actual coincide con los días indicados en el campo 'dia' de la clase.
- * Ejemplo de formatos soportados: "LUNES", "LUNES - MIERCOLES - VIERNES", "LU-MI-VI", "MA-JU", "LUNES A VIERNES", "SABADO".
+ * Determina el conjunto de días (0=Dom, 1=Lun, ..., 6=Sab) a los que corresponde un texto de horario.
+ * Soporta todas las convenciones universitarias (UAGRM / Bolivia / Latam):
+ * - "M-J", "M - J", "MA-JU", "MAR-JUE", "MARTES Y JUEVES", "MJ" -> [2, 4]
+ * - "L-M-V", "LU-MI-VI", "LUN-MIE-VIE", "LMV" -> [1, 3, 5]
+ * - "L-V", "LU-VI", "LUNES A VIERNES", "LUNES AL VIERNES" -> [1, 2, 3, 4, 5]
+ * - "L-S", "LUNES A SABADO" -> [1, 2, 3, 4, 5, 6]
+ * - "SABADO", "SAB", "SA", "S" -> [6]
+ * - "LUNES", "LUN", "LU", "L" -> [1]
+ * - "MARTES", "MAR", "MA" -> [2]
+ * - "MIERCOLES", "MIER", "MIE", "MI", "X" -> [3]
+ * - "JUEVES", "JUE", "JU", "J" -> [4]
+ * - "VIERNES", "VIE", "VI", "V" -> [5]
+ */
+export function extraerDiasClase(diaClaseRaw: string): Set<number> {
+  const dias = new Set<number>();
+  if (!diaClaseRaw || !diaClaseRaw.trim()) {
+    // Si no está especificado, asumimos todos los días hábiles
+    return new Set([0, 1, 2, 3, 4, 5, 6]);
+  }
+
+  const raw = normalizarTexto(diaClaseRaw);
+
+  // 1. Patrones compuestos exactos y rangos
+  // Lunes a Viernes
+  if (
+    raw.includes('LUNES A VIERNES') || 
+    raw.includes('LUNES AL VIERNES') || 
+    raw.includes('LU A VI') || 
+    raw === 'L-V' || 
+    raw === 'LV' || 
+    raw === 'LU-VI' || 
+    raw === 'LUN-VIE'
+  ) {
+    return new Set([1, 2, 3, 4, 5]);
+  }
+
+  // Lunes a Sábado
+  if (
+    raw.includes('LUNES A SABADO') || 
+    raw.includes('LUNES AL SABADO') || 
+    raw === 'L-S' || 
+    raw === 'LU-SA' || 
+    raw === 'LUN-SAB'
+  ) {
+    return new Set([1, 2, 3, 4, 5, 6]);
+  }
+
+  // Lunes, Miércoles y Viernes (L-M-V / LU-MI-VI / LMV)
+  if (
+    raw.includes('L-M-V') || 
+    raw.includes('L M V') || 
+    raw.includes('LMV') || 
+    raw.includes('LU-MI-VI') || 
+    raw.includes('LU MI VI') || 
+    raw.includes('LUN-MIE-VIE') ||
+    raw.includes('LUNES, MIERCOLES Y VIERNES') ||
+    raw.includes('LUNES MIERCOLES VIERNES')
+  ) {
+    dias.add(1); // Lunes
+    dias.add(3); // Miércoles
+    dias.add(5); // Viernes
+    if (raw.includes('S') && (raw.includes('SAB') || raw.endsWith('S') || raw.includes('-S'))) {
+      dias.add(6);
+    }
+    return dias;
+  }
+
+  // Martes y Jueves (M-J / MA-JU / MAR-JUE / MJ)
+  if (
+    raw.includes('M-J') || 
+    raw.includes('M - J') || 
+    raw.includes('M/J') || 
+    raw.includes('M J') || 
+    raw.includes('MJ') || 
+    raw.includes('MA-JU') || 
+    raw.includes('MAR-JUE') || 
+    raw.includes('MARTES Y JUEVES') ||
+    raw.includes('MARTES JUEVES')
+  ) {
+    dias.add(2); // Martes
+    dias.add(4); // Jueves
+    if (raw.includes('S') && (raw.includes('SAB') || raw.endsWith('S') || raw.includes('-S') || raw.includes('SABADO'))) {
+      dias.add(6); // Sábado (M-J-S)
+    }
+    return dias;
+  }
+
+  // 2. Descomposición por tokens (palabras o letras separadas por guión, espacio, coma, barra)
+  const tokens = raw.split(/[\s,\-\/]+/).filter(Boolean);
+
+  // Si tiene tokens explícitos
+  for (const token of tokens) {
+    // LUNES
+    if (token === 'L' || token === 'LU' || token === 'LUN' || token === 'LUNES') {
+      dias.add(1);
+    }
+    // MARTES
+    else if (token === 'MA' || token === 'MAR' || token === 'MARTES') {
+      dias.add(2);
+    }
+    // MIÉRCOLES
+    else if (token === 'MI' || token === 'MIE' || token === 'MIER' || token === 'MIERCOLES' || token === 'X') {
+      dias.add(3);
+    }
+    // JUEVES
+    else if (token === 'J' || token === 'JU' || token === 'JUE' || token === 'JUEV' || token === 'JUEVES') {
+      dias.add(4);
+    }
+    // VIERNES
+    else if (token === 'V' || token === 'VI' || token === 'VIE' || token === 'VIER' || token === 'VIERNES') {
+      dias.add(5);
+    }
+    // SÁBADO
+    else if (token === 'S' || token === 'SA' || token === 'SAB' || token === 'SABADO') {
+      dias.add(6);
+    }
+    // DOMINGO
+    else if (token === 'D' || token === 'DO' || token === 'DOM' || token === 'DOMINGO') {
+      dias.add(0);
+    }
+    // Token 'M' aislado
+    else if (token === 'M') {
+      // Si el texto completo contiene J (como M-J), M es Martes
+      if (raw.includes('J')) {
+        dias.add(2);
+      }
+      // Si el texto contiene L o V (como L-M-V), M es Miércoles
+      else if (raw.includes('L') || raw.includes('V')) {
+        dias.add(3);
+      }
+      // Si no es determinable, incluir Martes y Miércoles
+      else {
+        dias.add(2);
+        dias.add(3);
+      }
+    }
+  }
+
+  // Si no se identificó ningún día de manera estricta, pero contiene palabras completas
+  if (dias.size === 0) {
+    if (raw.includes('LUNES')) dias.add(1);
+    if (raw.includes('MARTES')) dias.add(2);
+    if (raw.includes('MIERCOLES')) dias.add(3);
+    if (raw.includes('JUEVES')) dias.add(4);
+    if (raw.includes('VIERNES')) dias.add(5);
+    if (raw.includes('SABADO')) dias.add(6);
+    if (raw.includes('DOMINGO')) dias.add(0);
+  }
+
+  // Si aun así está vacío, permitir para evitar bloquear falsamente al estudiante
+  if (dias.size === 0) {
+    return new Set([0, 1, 2, 3, 4, 5, 6]);
+  }
+
+  return dias;
+}
+
+/**
+ * Verifica si el día actual coincide con los días de la clase.
  */
 export function verificarCoincidenciaDia(diaClaseRaw: string, fechaReferencia: Date = new Date()): boolean {
   if (!diaClaseRaw || !diaClaseRaw.trim()) {
-    // Si no hay día especificado, permitimos por defecto
     return true;
   }
 
   const diaActualIndex = fechaReferencia.getDay();
-  const diaNormalizado = normalizarTexto(diaClaseRaw);
+  const diasClase = extraerDiasClase(diaClaseRaw);
 
-  // Tokens para el día actual
-  const tokensDiaActual = DIAS_MAP[diaActualIndex] || [];
-
-  // 1. Caso directo: si el texto contiene el nombre del día actual (ej: "LUNES", "MARTES")
-  for (const token of tokensDiaActual) {
-    // Expresión regular para palabra completa o delimitada por guión/espacio/coma
-    const regex = new RegExp(`(^|[\\s,\\-/])${token}([\\s,\\-/]|$)`, 'i');
-    if (regex.test(diaNormalizado)) {
-      return true;
-    }
-  }
-
-  // 2. Caso de rango "LUNES A VIERNES" o "LU A VI"
-  if (diaNormalizado.includes(' A ') || diaNormalizado.includes(' AL ')) {
-    if (diaActualIndex >= 1 && diaActualIndex <= 5) {
-      return true;
-    }
-  }
-
-  // 3. Formato compacto de letras: ej "L-M-V" o "LU MI VI"
-  const tokensComunes = diaNormalizado.split(/[\s,\-/]+/);
-  for (const t of tokensComunes) {
-    if (tokensDiaActual.includes(t)) {
-      return true;
-    }
-  }
-
-  return false;
+  return diasClase.has(diaActualIndex);
 }
 
 /**
@@ -96,9 +215,9 @@ export function verificarCoincidenciaDia(diaClaseRaw: string, fechaReferencia: D
  * Ejemplos soportados:
  * "07:00 - 09:15"
  * "07:00-09:15"
- * "07:00 a 09:15"
- * "7:00 - 9:15"
  * "18:15 - 20:30"
+ * "18:15-20:30"
+ * "7:00 a 9:15"
  * "0700 - 0915"
  */
 export function parsearRangoHorario(horarioRaw: string): {
@@ -118,9 +237,8 @@ export function parsearRangoHorario(horarioRaw: string): {
     };
   }
 
-  // Buscar dos grupos de hora:minuto
-  // Formato standard HH:MM o H:MM
-  const matchEstandar = limpio.match(/(\d{1,2}):(\d{2})\s*(?:-|a|al|hasta|\/)\s*(\d{1,2}):(\d{2})/i);
+  // Buscar dos grupos de hora:minuto (ej. 18:15 - 20:30)
+  const matchEstandar = limpio.match(/(\d{1,2}):(\d{2})\s*(?:-|a|al|hasta|\/|–|—)\s*(\d{1,2}):(\d{2})/i);
   if (matchEstandar) {
     const h1 = parseInt(matchEstandar[1], 10);
     const m1 = parseInt(matchEstandar[2], 10);
@@ -140,7 +258,7 @@ export function parsearRangoHorario(horarioRaw: string): {
   }
 
   // Formato compacto 0700 - 0915
-  const matchCompacto = limpio.match(/(\d{2})(\d{2})\s*(?:-|a)\s*(\d{2})(\d{2})/i);
+  const matchCompacto = limpio.match(/(\d{2})(\d{2})\s*(?:-|a|–|—)\s*(\d{2})(\d{2})/i);
   if (matchCompacto) {
     const h1 = parseInt(matchCompacto[1], 10);
     const m1 = parseInt(matchCompacto[2], 10);
@@ -169,13 +287,15 @@ export function parsearRangoHorario(horarioRaw: string): {
 
 /**
  * Valida si en el momento actual (o fecha dada) la clase se encuentra en curso.
- * Incluye un margen de tolerancia opcional (por defecto 0 minutos, o 5 minutos).
+ * Incluye un margen de tolerancia prudencial (por ejemplo 10 min antes y 15 min después)
+ * para que los estudiantes que ingresan unos minutos antes al aula o reportan al terminar
+ * puedan enviar su reporte sin bloqueos técnicos imprevistos.
  */
 export function validarHorarioClase(
   diaClase: string,
   horarioClase: string,
   fechaReferencia: Date = new Date(),
-  margenToleranciaMinutos: number = 0
+  margenToleranciaMinutos: number = 10
 ): ScheduleValidationResult {
   const diaActualIndex = fechaReferencia.getDay();
   const diaActualNombre = NOMBRES_DIAS[diaActualIndex] || 'Desconocido';
@@ -187,7 +307,7 @@ export function validarHorarioClase(
   const diaCoincide = verificarCoincidenciaDia(diaClase, fechaReferencia);
   const { inicioMinutos, finMinutos, horaInicioTexto, horaFinTexto } = parsearRangoHorario(horarioClase);
 
-  // Si no se pudo parsear el horario, permitimos por flexibilidad
+  // Si no se pudo parsear el horario, permitimos para no bloquear
   if (inicioMinutos === null || finMinutos === null) {
     return {
       estaEnHorario: true,
@@ -197,13 +317,14 @@ export function validarHorarioClase(
       horaActualTexto,
       diaClase: diaClase || 'No especificado',
       horarioClase: horarioClase || 'No especificado',
-      mensaje: 'Horario flexible / no estructurado.',
+      mensaje: 'Horario flexible / disponible.',
     };
   }
 
+  // Tolerancia: 10 minutos antes del inicio hasta 15 minutos después de la finalización
   const horaCoincide = 
     minutosActuales >= (inicioMinutos - margenToleranciaMinutos) && 
-    minutosActuales <= (finMinutos + margenToleranciaMinutos);
+    minutosActuales <= (finMinutos + 15);
 
   const estaEnHorario = diaCoincide && horaCoincide;
 
@@ -212,9 +333,9 @@ export function validarHorarioClase(
 
   if (estaEnHorario) {
     minutosRestantes = finMinutos - minutosActuales;
-    mensaje = `Clase en curso actualmente (${horaInicioTexto} a ${horaFinTexto}).`;
+    mensaje = `Clase en horario activo (${horaInicioTexto} a ${horaFinTexto}).`;
   } else if (!diaCoincide && !horaCoincide) {
-    mensaje = `Fuera de día y horario programado. La clase se imparte los ${diaClase} de ${horaInicioTexto} a ${horaFinTexto} (Hoy es ${diaActualNombre}, ${horaActualTexto}).`;
+    mensaje = `Fuera de día y horario programado. La clase corresponde a los días ${diaClase} de ${horaInicioTexto} a ${horaFinTexto} (Hoy es ${diaActualNombre}, ${horaActualTexto}).`;
   } else if (!diaCoincide) {
     mensaje = `Fuera de día programado. Esta clase corresponde a los días ${diaClase} (Hoy es ${diaActualNombre}).`;
   } else if (minutosActuales < inicioMinutos) {

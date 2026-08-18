@@ -20,7 +20,6 @@ import {
   Tag,
   Check,
   Lock,
-  Unlock,
   AlertTriangle,
   Camera,
   Image as ImageIcon
@@ -66,9 +65,6 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
   const [fechaActualTexto, setFechaActualTexto] = useState<string>('');
   const [horaActualRef, setHoraActualRef] = useState<Date>(new Date());
   const [denunciaEnviada, setDenunciaEnviada] = useState<DenunciaVarias | null>(null);
-  
-  // Modo de prueba para omitir restricción de horario si se requiere
-  const [modoPruebaOmitirHorario, setModoPruebaOmitirHorario] = useState<boolean>(false);
 
   const registrosMaestro = maestroVigente?.registros || [];
 
@@ -107,7 +103,7 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
     return validarHorarioClase(claseSeleccionada.dia, claseSeleccionada.horario, horaActualRef);
   }, [claseSeleccionada, horaActualRef]);
 
-  const horarioPermitido = validacionHorario.estaEnHorario || modoPruebaOmitirHorario;
+  const horarioPermitido = validacionHorario.estaEnHorario;
 
   const handleSeleccionarClase = (clase: OfertaClase) => {
     setClaseSeleccionada(clase);
@@ -414,52 +410,27 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
                 ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
                 : 'bg-red-50 border-red-300 text-red-950'
             }`}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-start sm:items-center gap-2.5">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    validacionHorario.estaEnHorario ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'
-                  }`}>
-                    {validacionHorario.estaEnHorario ? <Clock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                  </div>
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <strong className="text-xs sm:text-sm font-bold">
-                        {validacionHorario.estaEnHorario ? '✓ Clase en horario programado' : '⛔ Fuera de horario de clases'}
-                      </strong>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold uppercase ${
-                        validacionHorario.estaEnHorario ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'
-                      }`}>
-                        {validacionHorario.estaEnHorario ? 'Habilitado' : 'Restringido'}
-                      </span>
-                    </div>
-                    <p className="text-xs opacity-90 leading-tight">
-                      {validacionHorario.mensaje}
-                    </p>
-                  </div>
+              <div className="flex items-start sm:items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  validacionHorario.estaEnHorario ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'
+                }`}>
+                  {validacionHorario.estaEnHorario ? <Clock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setModoPruebaOmitirHorario(!modoPruebaOmitirHorario)}
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 self-end sm:self-auto cursor-pointer ${
-                    modoPruebaOmitirHorario
-                      ? 'bg-amber-100 border-amber-400 text-amber-900 shadow-2xs'
-                      : 'bg-white/80 hover:bg-white border-slate-300 text-slate-700'
-                  }`}
-                  title="Permite simular y probar el envío en cualquier momento"
-                >
-                  {modoPruebaOmitirHorario ? (
-                    <>
-                      <Unlock className="w-3 h-3 text-amber-700" />
-                      <span>Modo pruebas: Activo</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-3 h-3 text-slate-500" />
-                      <span>Modo pruebas</span>
-                    </>
-                  )}
-                </button>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <strong className="text-xs sm:text-sm font-bold">
+                      {validacionHorario.estaEnHorario ? '✓ Clase en horario programado' : '⛔ Fuera de horario de clases'}
+                    </strong>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold uppercase ${
+                      validacionHorario.estaEnHorario ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'
+                    }`}>
+                      {validacionHorario.estaEnHorario ? 'Habilitado' : 'Restringido'}
+                    </span>
+                  </div>
+                  <p className="text-xs opacity-90 leading-tight">
+                    {validacionHorario.mensaje}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
