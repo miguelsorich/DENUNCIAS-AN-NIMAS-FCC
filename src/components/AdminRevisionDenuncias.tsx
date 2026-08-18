@@ -17,7 +17,10 @@ import {
   X,
   GraduationCap,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Camera,
+  Eye,
+  Image as ImageIcon
 } from 'lucide-react';
 
 interface AdminRevisionDenunciasProps {
@@ -35,6 +38,12 @@ interface ElementoAEliminar {
   tipo: 'inasistencia' | 'denuncia-varias' | 'todas-inasistencias' | 'todas-denuncias';
   id?: string;
   descripcion: string;
+}
+
+interface FotoParaVer {
+  url: string;
+  titulo: string;
+  nombre?: string;
 }
 
 export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
@@ -56,6 +65,9 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
 
   // Estado para el modal de confirmación de eliminación
   const [elementoAEliminar, setElementoAEliminar] = useState<ElementoAEliminar | null>(null);
+  
+  // Estado para ver fotografía de prueba adjunta en pantalla completa
+  const [fotoParaVer, setFotoParaVer] = useState<FotoParaVer | null>(null);
 
   // Filtrado de inasistencias
   const inasistenciasFiltradas = useMemo(() => {
@@ -397,6 +409,44 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
                     </div>
                   </div>
 
+                  {/* Fotografía de prueba si fue adjuntada */}
+                  {reporte.imagenAdjunta && (
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-300 shrink-0 bg-slate-200">
+                          <img
+                            src={reporte.imagenAdjunta}
+                            alt="Prueba adjunta"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                        <div className="text-xs">
+                          <span className="font-bold text-slate-800 flex items-center gap-1">
+                            <Camera className="w-3.5 h-3.5 text-blue-900" />
+                            Foto de prueba adjunta
+                          </span>
+                          <span className="text-slate-500 truncate block max-w-xs">
+                            {reporte.imagenNombre || 'evidencia.jpg'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setFotoParaVer({
+                          url: reporte.imagenAdjunta!,
+                          titulo: `Prueba de inasistencia: ${reporte.docente} (${reporte.sigla})`,
+                          nombre: reporte.imagenNombre
+                        })}
+                        className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Ver foto completa</span>
+                      </button>
+                    </div>
+                  )}
+
                   {/* Comentario cuando exista */}
                   {reporte.comentario ? (
                     <div className="space-y-1 pt-1">
@@ -638,6 +688,44 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
                       </div>
                     </div>
 
+                    {/* Fotografía de prueba si fue adjuntada */}
+                    {denuncia.imagenAdjunta && (
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-300 shrink-0 bg-slate-200">
+                            <img
+                              src={denuncia.imagenAdjunta}
+                              alt="Prueba adjunta"
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                          <div className="text-xs">
+                            <span className="font-bold text-slate-800 flex items-center gap-1">
+                              <Camera className="w-3.5 h-3.5 text-blue-900" />
+                              Foto de prueba adjunta
+                            </span>
+                            <span className="text-slate-500 truncate block max-w-xs">
+                              {denuncia.imagenNombre || 'evidencia.jpg'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setFotoParaVer({
+                            url: denuncia.imagenAdjunta!,
+                            titulo: `Prueba de denuncia: ${denuncia.tipoDenuncia} - ${docenteVal || 'Docente'}`,
+                            nombre: denuncia.imagenNombre
+                          })}
+                          className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Ver foto completa</span>
+                        </button>
+                      </div>
+                    )}
+
                     {/* Comentario o descripción */}
                     <div className="space-y-1">
                       <span className="text-slate-400 uppercase font-semibold block text-[11px]">
@@ -659,6 +747,49 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
             </div>
           )}
         </section>
+      )}
+
+      {/* Modal visor de fotografía en pantalla completa */}
+      {fotoParaVer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-3xl w-full p-5 shadow-2xl border border-slate-200 space-y-3 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <span className="font-bold text-slate-900 text-sm flex items-center gap-1.5 truncate pr-2">
+                <Camera className="w-4 h-4 text-blue-900 shrink-0" />
+                {fotoParaVer.titulo}
+              </span>
+              <button
+                type="button"
+                onClick={() => setFotoParaVer(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-auto flex items-center justify-center bg-slate-900 rounded-xl p-2">
+              <img
+                src={fotoParaVer.url}
+                alt="Prueba completa"
+                className="max-h-[65vh] max-w-full object-contain rounded"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-xs pt-1">
+              <span className="text-slate-500 font-medium truncate max-w-xs">
+                {fotoParaVer.nombre || 'evidencia.jpg'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setFotoParaVer(null)}
+                className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl cursor-pointer"
+              >
+                Cerrar vista
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modal de confirmación para eliminar o limpiar reportes */}

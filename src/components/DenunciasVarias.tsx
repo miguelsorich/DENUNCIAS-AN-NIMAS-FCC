@@ -18,10 +18,17 @@ import {
   Calendar,
   MapPin,
   Tag,
-  Check
+  Check,
+  Lock,
+  Unlock,
+  AlertTriangle,
+  Camera,
+  Image as ImageIcon
 } from 'lucide-react';
 import { DenunciasVariasConfirmacion } from './DenunciasVariasConfirmacion';
 import { buscarClasesEnMaestro } from '../utils/searchUtils';
+import { validarHorarioClase } from '../utils/scheduleValidator';
+import { CargadorImagenPrueba } from './CargadorImagenPrueba';
 
 const CATEGORIAS_DENUNCIA: { id: TipoDenunciaVarias; titulo: string; descripcion: string }[] = [
   {
@@ -54,8 +61,14 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
   const [claseSeleccionada, setClaseSeleccionada] = useState<OfertaClase | null>(null);
   const [tipoSeleccionado, setTipoSeleccionado] = useState<TipoDenunciaVarias | null>(null);
   const [comentario, setComentario] = useState<string>('');
+  const [imagenDataUrl, setImagenDataUrl] = useState<string | undefined>(undefined);
+  const [imagenNombre, setImagenNombre] = useState<string | undefined>(undefined);
   const [fechaActualTexto, setFechaActualTexto] = useState<string>('');
+  const [horaActualRef, setHoraActualRef] = useState<Date>(new Date());
   const [denunciaEnviada, setDenunciaEnviada] = useState<DenunciaVarias | null>(null);
+  
+  // Modo de prueba para omitir restricción de horario si se requiere
+  const [modoPruebaOmitirHorario, setModoPruebaOmitirHorario] = useState<boolean>(false);
 
   const registrosMaestro = maestroVigente?.registros || [];
 
@@ -66,25 +79,35 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
 
   // Registro de fecha y hora automática del sistema
   useEffect(() => {
-    const obtenerFechaLegible = () => {
+    const actualizarFecha = () => {
       const now = new Date();
-      return now.toLocaleDateString('es-ES', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      setHoraActualRef(now);
+      setFechaActualTexto(
+        now.toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      );
     };
 
-    setFechaActualTexto(obtenerFechaLegible());
-    const intervalo = setInterval(() => {
-      setFechaActualTexto(obtenerFechaLegible());
-    }, 30000);
-
+    actualizarFecha();
+    const intervalo = setInterval(actualizarFecha, 10000);
     return () => clearInterval(intervalo);
   }, []);
+
+  // Validación de horario si hay clase seleccionada
+  const validacionHorario = useMemo(() => {
+    if (!claseSeleccionada) {
+      return { estaEnHorario: true, mensaje: 'Seleccione una clase.' };
+    }
+    return validarHorarioClase(claseSeleccionada.dia, claseSeleccionada.horario, horaActualRef);
+  }, [claseSeleccionada, horaActualRef]);
+
+  const horarioPermitido = validacionHorario.estaEnHorario || modoPruebaOmitirHorario;
 
   const handleSeleccionarClase = (clase: OfertaClase) => {
     setClaseSeleccionada(clase);
@@ -104,7 +127,7 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
 
   const handleEnviarDenuncia = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!claseSeleccionada || !tipoSeleccionado) return;
+    if (!claseSeleccionada || !tipoSeleccionado || !horarioPermitido) return;
     if (tipoSeleccionado === 'Otros' && !comentario.trim()) return;
 
     const nuevaDenuncia: DenunciaVarias = {
@@ -120,6 +143,8 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
       aula: claseSeleccionada.aula,
       tipoDenuncia: tipoSeleccionado,
       comentario: comentario.trim(),
+      imagenAdjunta: imagenDataUrl,
+      imagenNombre: imagenNombre,
       fechaRegistro: fechaActualTexto,
       esAnonimo: true,
     };
@@ -136,6 +161,8 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
     setTerminoBusqueda('');
     setTipoSeleccionado(null);
     setComentario('');
+    setImagenDataUrl(undefined);
+    setImagenNombre(undefined);
   };
 
   if (denunciaEnviada) {
@@ -147,9 +174,10 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
     );
   }
 
-  // Validación: Se requiere Clase + Tipo de Denuncia + (si es "Otros", descripción obligatoria)
+  // Validación: Se requiere Clase + Horario permitido + Tipo de Denuncia + (si es "Otros", descripción obligatoria)
   const puedeEnviar = Boolean(
     claseSeleccionada &&
+    horarioPermitido &&
     tipoSeleccionado &&
     (tipoSeleccionado !== 'Otros' || comentario.trim().length > 0)
   );
@@ -200,7 +228,7 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
         </div>
 
         <p className="text-xs sm:text-sm text-slate-600">
-          Siga los pasos: busque y seleccione la clase o docente del Maestro de Oferta vigente, clasifique la irregularidad, describa lo sucedido y envíe su reporte confidencial.
+          Siga los pasos: busque y seleccione la clase o docente del Maestro de Oferta vigente, clasifique la irregularidad, describa lo sucedido, adjunte una fotografía opcional y envíe su reporte confidencial.
         </p>
       </section>
 
@@ -336,7 +364,7 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
           /* Clase Seleccionada */
           <div 
             id="tarjeta-clase-seleccionada-denuncia"
-            className="p-5 rounded-xl border-2 border-blue-900 bg-blue-50/30 space-y-3"
+            className="p-5 rounded-xl border-2 border-blue-900 bg-blue-50/30 space-y-4"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-900">
@@ -377,6 +405,61 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
                   <span className="text-slate-400 block text-[11px] uppercase font-semibold">Aula:</span>
                   <span className="text-slate-800 font-medium block">{claseSeleccionada.aula}</span>
                 </div>
+              </div>
+            </div>
+
+            {/* VALIDACIÓN DEL HORARIO DE CLASE */}
+            <div className={`p-3.5 rounded-xl border transition-all ${
+              validacionHorario.estaEnHorario
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                : 'bg-red-50 border-red-300 text-red-950'
+            }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-2.5">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    validacionHorario.estaEnHorario ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'
+                  }`}>
+                    {validacionHorario.estaEnHorario ? <Clock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <strong className="text-xs sm:text-sm font-bold">
+                        {validacionHorario.estaEnHorario ? '✓ Clase en horario programado' : '⛔ Fuera de horario de clases'}
+                      </strong>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold uppercase ${
+                        validacionHorario.estaEnHorario ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'
+                      }`}>
+                        {validacionHorario.estaEnHorario ? 'Habilitado' : 'Restringido'}
+                      </span>
+                    </div>
+                    <p className="text-xs opacity-90 leading-tight">
+                      {validacionHorario.mensaje}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setModoPruebaOmitirHorario(!modoPruebaOmitirHorario)}
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 self-end sm:self-auto cursor-pointer ${
+                    modoPruebaOmitirHorario
+                      ? 'bg-amber-100 border-amber-400 text-amber-900 shadow-2xs'
+                      : 'bg-white/80 hover:bg-white border-slate-300 text-slate-700'
+                  }`}
+                  title="Permite simular y probar el envío en cualquier momento"
+                >
+                  {modoPruebaOmitirHorario ? (
+                    <>
+                      <Unlock className="w-3 h-3 text-amber-700" />
+                      <span>Modo pruebas: Activo</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3 h-3 text-slate-500" />
+                      <span>Modo pruebas</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
@@ -446,7 +529,25 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
         </div>
       </section>
 
-      {/* PASO 3: Comentario o Descripción */}
+      {/* PASO 3: Fotografía o Imagen de Prueba (Opcional) */}
+      <div className={`transition-opacity ${!claseSeleccionada ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+        <CargadorImagenPrueba
+          imagenDataUrl={imagenDataUrl}
+          imagenNombre={imagenNombre}
+          onImagenSeleccionada={(dataUrl, nombre) => {
+            setImagenDataUrl(dataUrl);
+            setImagenNombre(nombre);
+          }}
+          onQuitarImagen={() => {
+            setImagenDataUrl(undefined);
+            setImagenNombre(undefined);
+          }}
+          titulo="Fotografía o imagen como prueba (Opcional)"
+          descripcion="Si tienes una foto del recibo/boleto del seminario, foto del libro obligatorio, captura de mensaje u otra prueba, puedes adjuntarla aquí. Si no tienes foto, puedes enviar la denuncia sin problema."
+        />
+      </div>
+
+      {/* PASO 4: Comentario o Descripción */}
       <section 
         id="seccion-comentario-denuncia"
         className={`bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4 transition-opacity ${
@@ -456,7 +557,7 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-blue-900 text-white font-bold text-xs flex items-center justify-center">
-              3
+              4
             </span>
             <h2 className="text-lg font-bold text-slate-900">
               Comentario o descripción de la denuncia
@@ -497,7 +598,7 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
         </div>
       </section>
 
-      {/* PASO 4: Fecha Automática del Sistema */}
+      {/* PASO 5: Fecha Automática del Sistema */}
       <section 
         id="seccion-fecha-automatica-denuncia"
         className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"
@@ -521,7 +622,7 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
         </div>
       </section>
 
-      {/* PASO 5: Revisión antes de enviar */}
+      {/* PASO 6: Revisión antes de enviar */}
       {claseSeleccionada && tipoSeleccionado && (
         <section 
           id="seccion-revision-previa-denuncia"
@@ -560,17 +661,43 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
             </div>
 
             <div className="bg-white p-3 rounded-xl border border-slate-200">
-              <span className="text-slate-400 uppercase font-semibold block text-[10px]">Fecha automática:</span>
-              <span className="font-semibold text-slate-900 capitalize block mt-0.5">{fechaActualTexto}</span>
+              <span className="text-slate-400 uppercase font-semibold block text-[10px]">Horario de clase:</span>
+              <span className={`font-bold block mt-0.5 ${validacionHorario.estaEnHorario ? 'text-emerald-700' : 'text-red-700'}`}>
+                {validacionHorario.estaEnHorario ? '✓ En horario de clase' : '⛔ Fuera de horario programado'}
+              </span>
             </div>
 
             <div className="bg-white p-3 rounded-xl border border-slate-200">
-              <span className="text-slate-400 uppercase font-semibold block text-[10px]">Comentario:</span>
-              <span className="text-slate-800 italic block mt-0.5 truncate">
+              <span className="text-slate-400 uppercase font-semibold block text-[10px]">Prueba fotográfica:</span>
+              <span className={`font-semibold block mt-0.5 ${imagenDataUrl ? 'text-emerald-700' : 'text-slate-500'}`}>
+                {imagenDataUrl ? '✓ Foto adjunta' : 'Sin foto adjunta (Opcional)'}
+              </span>
+            </div>
+
+            <div className="bg-white p-3 rounded-xl border border-slate-200 sm:col-span-2 md:col-span-3">
+              <span className="text-slate-400 uppercase font-semibold block text-[10px]">Comentario / Descripción:</span>
+              <span className="text-slate-800 italic block mt-0.5">
                 {comentario.trim() || '(Sin descripción adicional)'}
               </span>
             </div>
           </div>
+
+          {imagenDataUrl && (
+            <div className="pt-2 border-t border-slate-200 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-300 shrink-0 bg-slate-200">
+                <img
+                  src={imagenDataUrl}
+                  alt="Miniatura de prueba"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="text-xs">
+                <span className="font-bold text-slate-800 block">Fotografía de prueba adjunta</span>
+                <span className="text-slate-500">{imagenNombre}</span>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -603,9 +730,11 @@ export const DenunciasVarias: React.FC<DenunciasVariasProps> = ({
           <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-center">
             {!claseSeleccionada 
               ? 'Por favor busque y seleccione una clase antes de enviar.'
-              : !tipoSeleccionado 
-                ? 'Por favor seleccione una categoría de denuncia.' 
-                : 'Debe escribir una descripción para la categoría "Otros".'}
+              : !horarioPermitido
+                ? `⛔ No se puede denunciar fuera del horario de clases (${claseSeleccionada.dia} ${claseSeleccionada.horario}).`
+                : !tipoSeleccionado 
+                  ? 'Por favor seleccione una categoría de denuncia.' 
+                  : 'Debe escribir una descripción para la categoría "Otros".'}
           </p>
         )}
       </form>

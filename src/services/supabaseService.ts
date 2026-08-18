@@ -180,6 +180,8 @@ export async function fetchReportesInasistenciaSupabase(): Promise<ReporteInasis
       aula: item.aula || '',
       inasistenciaMarcada: item.inasistencia_marcada ?? item.inasistenciaMarcada ?? true,
       comentario: item.comentario || '',
+      imagenAdjunta: item.imagen_adjunta || item.imagenAdjunta || undefined,
+      imagenNombre: item.imagen_nombre || item.imagenNombre || undefined,
       fechaReporte: item.fecha_reporte || item.fechaReporte || new Date(item.created_at).toLocaleDateString(),
       esAnonimo: item.es_anonimo ?? item.esAnonimo ?? true,
     }));
@@ -191,7 +193,7 @@ export async function fetchReportesInasistenciaSupabase(): Promise<ReporteInasis
 
 export async function insertReporteInasistenciaSupabase(reporte: ReporteInasistencia): Promise<boolean> {
   try {
-    const payload = {
+    const payload: any = {
       id: reporte.id,
       clase_id: reporte.claseId,
       sigla: reporte.sigla,
@@ -207,12 +209,25 @@ export async function insertReporteInasistenciaSupabase(reporte: ReporteInasiste
       es_anonimo: reporte.esAnonimo,
     };
 
+    if (reporte.imagenAdjunta) {
+      payload.imagen_adjunta = reporte.imagenAdjunta;
+      payload.imagen_nombre = reporte.imagenNombre || 'evidencia.jpg';
+    }
+
     const { error } = await supabase
       .from('reportes_inasistencia')
       .insert([payload]);
 
     if (error) {
       console.warn('Error al insertar reporte de inasistencia en Supabase:', error.message);
+      // Si falla por columnas adicionales no existentes en supabase, intentar sin campos opcionales
+      if (error.message?.includes('column') || error.code === '42703') {
+        const { imagen_adjunta, imagen_nombre, ...safePayload } = payload;
+        const { error: fallbackError } = await supabase
+          .from('reportes_inasistencia')
+          .insert([safePayload]);
+        return !fallbackError;
+      }
       return false;
     }
     return true;
@@ -249,6 +264,8 @@ export async function fetchDenunciasVariasSupabase(): Promise<DenunciaVarias[] |
       docenteDenunciado: item.docente_denunciado || item.docenteDenunciado || item.docente,
       tipoDenuncia: item.tipo_denuncia || item.tipoDenuncia || 'Otros',
       comentario: item.comentario || '',
+      imagenAdjunta: item.imagen_adjunta || item.imagenAdjunta || undefined,
+      imagenNombre: item.imagen_nombre || item.imagenNombre || undefined,
       fechaRegistro: item.fecha_registro || item.fechaRegistro || new Date(item.created_at).toLocaleDateString(),
       esAnonimo: item.es_anonimo ?? item.esAnonimo ?? true,
     }));
@@ -260,7 +277,7 @@ export async function fetchDenunciasVariasSupabase(): Promise<DenunciaVarias[] |
 
 export async function insertDenunciaVariasSupabase(denuncia: DenunciaVarias): Promise<boolean> {
   try {
-    const payload = {
+    const payload: any = {
       id: denuncia.id,
       clase_id: denuncia.claseId || null,
       docente: denuncia.docente || '',
@@ -277,12 +294,25 @@ export async function insertDenunciaVariasSupabase(denuncia: DenunciaVarias): Pr
       es_anonimo: denuncia.esAnonimo,
     };
 
+    if (denuncia.imagenAdjunta) {
+      payload.imagen_adjunta = denuncia.imagenAdjunta;
+      payload.imagen_nombre = denuncia.imagenNombre || 'evidencia.jpg';
+    }
+
     const { error } = await supabase
       .from('denuncias_varias')
       .insert([payload]);
 
     if (error) {
       console.warn('Error al insertar denuncia varias en Supabase:', error.message);
+      // Si falla por columnas adicionales no existentes en supabase, reintentar sin campos de imagen
+      if (error.message?.includes('column') || error.code === '42703') {
+        const { imagen_adjunta, imagen_nombre, ...safePayload } = payload;
+        const { error: fallbackError } = await supabase
+          .from('denuncias_varias')
+          .insert([safePayload]);
+        return !fallbackError;
+      }
       return false;
     }
     return true;

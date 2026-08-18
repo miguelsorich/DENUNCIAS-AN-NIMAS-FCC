@@ -39,6 +39,8 @@ export interface ReporteInasistencia {
   aula: string;
   inasistenciaMarcada: boolean;
   comentario?: string;
+  imagenAdjunta?: string; // Data URL de la fotografía o comprobante opcional
+  imagenNombre?: string;
   fechaReporte: string;
   esAnonimo: boolean;
 }
@@ -61,6 +63,8 @@ export interface DenunciaVarias {
   docenteDenunciado?: string; // fallback if only docente was set
   tipoDenuncia: TipoDenunciaVarias;
   comentario: string;
+  imagenAdjunta?: string; // Data URL de la fotografía o comprobante opcional
+  imagenNombre?: string;
   fechaRegistro: string;
   esAnonimo: boolean;
 }

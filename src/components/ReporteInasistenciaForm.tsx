@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { OfertaClase, ReporteInasistencia } from '../types';
 import { 
   CheckCircle2, 
@@ -8,11 +8,17 @@ import {
   MapPin, 
   ShieldCheck, 
   Send, 
-  AlertTriangle,
-  FileText,
-  UserX,
-  MessageSquare
+  AlertTriangle, 
+  FileText, 
+  UserX, 
+  MessageSquare,
+  Lock,
+  Unlock,
+  Camera,
+  Image as ImageIcon
 } from 'lucide-react';
+import { validarHorarioClase } from '../utils/scheduleValidator';
+import { CargadorImagenPrueba } from './CargadorImagenPrueba';
 
 interface ReporteInasistenciaFormProps {
   clase: OfertaClase;
@@ -27,33 +33,46 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
 }) => {
   const [inasistenciaMarcada, setInasistenciaMarcada] = useState<boolean>(false);
   const [comentario, setComentario] = useState<string>('');
+  const [imagenDataUrl, setImagenDataUrl] = useState<string | undefined>(undefined);
+  const [imagenNombre, setImagenNombre] = useState<string | undefined>(undefined);
   const [fechaActualTexto, setFechaActualTexto] = useState<string>('');
+  const [horaActualRef, setHoraActualRef] = useState<Date>(new Date());
+  
+  // Modo de prueba para omitir restricción de horario si se requiere
+  const [modoPruebaOmitirHorario, setModoPruebaOmitirHorario] = useState<boolean>(false);
 
   // Fecha generada automáticamente en el momento actual
   useEffect(() => {
-    const obtenerFechaLegible = () => {
+    const actualizarFecha = () => {
       const now = new Date();
-      return now.toLocaleDateString('es-ES', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      setHoraActualRef(now);
+      setFechaActualTexto(
+        now.toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      );
     };
 
-    setFechaActualTexto(obtenerFechaLegible());
-    const intervalo = setInterval(() => {
-      setFechaActualTexto(obtenerFechaLegible());
-    }, 30000);
-
+    actualizarFecha();
+    const intervalo = setInterval(actualizarFecha, 10000);
     return () => clearInterval(intervalo);
   }, []);
 
+  // Validación estricta del horario de la clase seleccionada
+  const validacionHorario = useMemo(() => {
+    return validarHorarioClase(clase.dia, clase.horario, horaActualRef);
+  }, [clase.dia, clase.horario, horaActualRef]);
+
+  const horarioPermitido = validacionHorario.estaEnHorario || modoPruebaOmitirHorario;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inasistenciaMarcada) return;
+    if (!inasistenciaMarcada || !horarioPermitido) return;
 
     const reporteFinal: ReporteInasistencia = {
       id: `rep-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -67,6 +86,8 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
       aula: clase.aula,
       inasistenciaMarcada: true,
       comentario: comentario.trim() ? comentario.trim() : undefined,
+      imagenAdjunta: imagenDataUrl,
+      imagenNombre: imagenNombre,
       fechaReporte: fechaActualTexto,
       esAnonimo: true,
     };
@@ -152,7 +173,7 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
           <div className="space-y-3 md:border-l md:border-slate-200 md:pl-5">
             <div>
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
-                Día:
+                Día programado:
               </span>
               <div className="flex items-center gap-1.5 mt-0.5 text-slate-800 font-semibold">
                 <Calendar className="w-4 h-4 text-blue-800" />
@@ -162,7 +183,7 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
 
             <div>
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
-                Horario:
+                Horario programado:
               </span>
               <div className="flex items-center gap-1.5 mt-0.5 text-slate-800 font-mono font-semibold">
                 <Clock className="w-4 h-4 text-blue-800" />
@@ -181,15 +202,83 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
             </div>
           </div>
         </div>
+
+        {/* VALIDACIÓN EN TIEMPO REAL DEL HORARIO DE CLASE */}
+        <div className={`p-4 rounded-xl border transition-all ${
+          validacionHorario.estaEnHorario
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+            : 'bg-red-50 border-red-300 text-red-950'
+        }`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                validacionHorario.estaEnHorario 
+                  ? 'bg-emerald-200 text-emerald-900' 
+                  : 'bg-red-200 text-red-900'
+              }`}>
+                {validacionHorario.estaEnHorario ? (
+                  <Clock className="w-5 h-5" />
+                ) : (
+                  <Lock className="w-5 h-5" />
+                )}
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <strong className="text-sm sm:text-base font-bold">
+                    {validacionHorario.estaEnHorario 
+                      ? '✓ Clase en horario activo' 
+                      : '⛔ Fuera de horario programado'}
+                  </strong>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                    validacionHorario.estaEnHorario
+                      ? 'bg-emerald-200 text-emerald-900'
+                      : 'bg-red-200 text-red-900'
+                  }`}>
+                    {validacionHorario.estaEnHorario ? 'Permitido' : 'Bloqueado'}
+                  </span>
+                </div>
+                <p className="text-xs leading-relaxed opacity-90">
+                  {validacionHorario.mensaje}
+                </p>
+              </div>
+            </div>
+
+            {/* Switch de modo de prueba para omitir validación */}
+            <button
+              type="button"
+              onClick={() => setModoPruebaOmitirHorario(!modoPruebaOmitirHorario)}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 self-end sm:self-auto cursor-pointer ${
+                modoPruebaOmitirHorario
+                  ? 'bg-amber-100 border-amber-400 text-amber-900 shadow-2xs'
+                  : 'bg-white/80 hover:bg-white border-slate-300 text-slate-700'
+              }`}
+              title="Permite simular y probar el envío en cualquier momento"
+            >
+              {modoPruebaOmitirHorario ? (
+                <>
+                  <Unlock className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Modo pruebas: Activo (Horario omitido)</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Modo pruebas (Omitir horario)</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* 2. SECCIÓN: MARCAR LA INASISTENCIA */}
       <section 
         id="seccion-marcar-inasistencia"
         className={`bg-white rounded-2xl p-6 sm:p-7 border-2 transition-all shadow-xs space-y-4 ${
-          inasistenciaMarcada 
-            ? 'border-red-300 bg-red-50/20' 
-            : 'border-slate-200 hover:border-slate-300'
+          !horarioPermitido 
+            ? 'opacity-60 border-slate-200' 
+            : inasistenciaMarcada 
+              ? 'border-red-300 bg-red-50/20' 
+              : 'border-slate-200 hover:border-slate-300'
         }`}
       >
         <div className="flex items-center gap-2">
@@ -201,18 +290,21 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
 
         <label 
           htmlFor="check-inasistencia-docente"
-          className={`flex items-start gap-4 p-4 sm:p-5 rounded-xl border-2 cursor-pointer transition-all ${
-            inasistenciaMarcada
-              ? 'bg-red-50 border-red-500 text-red-950 shadow-xs'
-              : 'bg-slate-50 border-slate-300 hover:bg-slate-100 text-slate-800'
+          className={`flex items-start gap-4 p-4 sm:p-5 rounded-xl border-2 transition-all ${
+            !horarioPermitido
+              ? 'cursor-not-allowed bg-slate-100 border-slate-300 text-slate-500'
+              : inasistenciaMarcada
+                ? 'bg-red-50 border-red-500 text-red-950 shadow-xs cursor-pointer'
+                : 'bg-slate-50 border-slate-300 hover:bg-slate-100 text-slate-800 cursor-pointer'
           }`}
         >
           <input
             id="check-inasistencia-docente"
             type="checkbox"
+            disabled={!horarioPermitido}
             checked={inasistenciaMarcada}
             onChange={(e) => setInasistenciaMarcada(e.target.checked)}
-            className="w-6 h-6 mt-0.5 text-red-600 rounded border-slate-300 focus:ring-red-500 cursor-pointer shrink-0"
+            className="w-6 h-6 mt-0.5 text-red-600 rounded border-slate-300 focus:ring-red-500 cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <div className="space-y-1">
             <span className="text-base sm:text-lg font-bold block">
@@ -224,7 +316,14 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
           </div>
         </label>
 
-        {!inasistenciaMarcada && (
+        {!horarioPermitido && (
+          <p className="text-xs text-red-700 font-bold flex items-center gap-1.5 bg-red-50 p-3 rounded-lg border border-red-200">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            No puedes reportar la inasistencia fuera del horario de clases ({clase.dia} {clase.horario}).
+          </p>
+        )}
+
+        {horarioPermitido && !inasistenciaMarcada && (
           <p className="text-xs text-amber-700 font-medium flex items-center gap-1.5">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             Debes marcar esta opción para habilitar el envío del reporte.
@@ -232,7 +331,23 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
         )}
       </section>
 
-      {/* 3. SECCIÓN: COMENTARIO OPCIONAL */}
+      {/* 3. SECCIÓN: CARGAR FOTO / IMAGEN COMO PRUEBA (OPCIONAL) */}
+      <CargadorImagenPrueba
+        imagenDataUrl={imagenDataUrl}
+        imagenNombre={imagenNombre}
+        onImagenSeleccionada={(dataUrl, nombre) => {
+          setImagenDataUrl(dataUrl);
+          setImagenNombre(nombre);
+        }}
+        onQuitarImagen={() => {
+          setImagenDataUrl(undefined);
+          setImagenNombre(undefined);
+        }}
+        titulo="Fotografía o imagen como prueba de inasistencia (Opcional)"
+        descripcion="Si tienes una foto del aula vacía, captura de mensaje o aviso de suspensión, puedes adjuntarla aquí. Si no tienes foto, puedes enviar el reporte igualmente."
+      />
+
+      {/* 4. SECCIÓN: COMENTARIO OPCIONAL */}
       <section 
         id="seccion-comentario-opcional"
         className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-3"
@@ -261,7 +376,7 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
         />
       </section>
 
-      {/* 4. SECCIÓN: FECHA AUTOMÁTICA Y 5. ANONIMATO */}
+      {/* 5. SECCIÓN: FECHA AUTOMÁTICA Y 6. ANONIMATO */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Fecha automática (Solo lectura, generada por el sistema) */}
         <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-1.5">
@@ -292,7 +407,7 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
         </div>
       </div>
 
-      {/* 6. SECCIÓN: REVISIÓN ANTES DEL ENVÍO */}
+      {/* 7. SECCIÓN: REVISIÓN ANTES DEL ENVÍO */}
       <section 
         id="seccion-resumen-revision"
         className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5"
@@ -332,7 +447,36 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
                 {inasistenciaMarcada ? '✓ El docente no asistió a esta clase' : '✕ No marcada'}
               </span>
             </div>
+            <div>
+              <strong className="text-slate-500 block text-xs uppercase">Horario de clase:</strong>
+              <span className={`font-bold ${validacionHorario.estaEnHorario ? 'text-emerald-700' : 'text-red-700'}`}>
+                {validacionHorario.estaEnHorario ? '✓ En horario de clase' : '⛔ Fuera de horario programado'}
+              </span>
+            </div>
+            <div>
+              <strong className="text-slate-500 block text-xs uppercase">Prueba fotográfica:</strong>
+              <span className={`font-semibold ${imagenDataUrl ? 'text-emerald-700' : 'text-slate-500'}`}>
+                {imagenDataUrl ? '✓ Foto adjunta' : 'Sin foto adjunta (Opcional)'}
+              </span>
+            </div>
           </div>
+
+          {imagenDataUrl && (
+            <div className="pt-2 border-t border-slate-200 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-300 shrink-0 bg-slate-200">
+                <img
+                  src={imagenDataUrl}
+                  alt="Miniatura de prueba"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="text-xs">
+                <span className="font-bold text-slate-800 block">Fotografía de prueba adjunta</span>
+                <span className="text-slate-500">{imagenNombre}</span>
+              </div>
+            </div>
+          )}
 
           {comentario.trim() && (
             <div className="pt-2 border-t border-slate-200">
@@ -349,10 +493,10 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
           <button
             type="submit"
             id="btn-enviar-reporte"
-            disabled={!inasistenciaMarcada}
-            className={`w-full py-4 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer ${
-              inasistenciaMarcada
-                ? 'bg-blue-900 hover:bg-blue-800 active:bg-blue-950 text-white hover:shadow-md'
+            disabled={!inasistenciaMarcada || !horarioPermitido}
+            className={`w-full py-4 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 shadow-xs ${
+              inasistenciaMarcada && horarioPermitido
+                ? 'bg-blue-900 hover:bg-blue-800 active:bg-blue-950 text-white hover:shadow-md cursor-pointer'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
             }`}
           >
@@ -360,11 +504,15 @@ export const ReporteInasistenciaForm: React.FC<ReporteInasistenciaFormProps> = (
             <span>Enviar reporte</span>
           </button>
 
-          {!inasistenciaMarcada && (
+          {!horarioPermitido ? (
+            <p className="text-center text-xs text-red-600 font-bold mt-2">
+              ⛔ No se puede enviar el reporte porque la clase está fuera del horario programado ({clase.dia} {clase.horario}).
+            </p>
+          ) : !inasistenciaMarcada ? (
             <p className="text-center text-xs text-slate-500 mt-2">
               Para habilitar el botón de envío, marca la casilla &quot;El docente no asistió a esta clase&quot;.
             </p>
-          )}
+          ) : null}
         </div>
       </section>
     </form>
