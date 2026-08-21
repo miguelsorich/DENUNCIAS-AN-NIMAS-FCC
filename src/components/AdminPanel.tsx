@@ -19,6 +19,8 @@ import { AdminImportarMaestro } from './AdminImportarMaestro';
 interface AdminPanelProps {
   maestroVigente: MaestroOfertaVigente | null;
   onGuardarMaestro: (nuevoMaestro: MaestroOfertaVigente) => void;
+  maestroVirtual?: MaestroOfertaVigente | null;
+  onGuardarMaestroVirtual?: (nuevoMaestro: MaestroOfertaVigente) => void;
   reportesInasistencia: ReporteInasistencia[];
   denunciasVarias: DenunciaVarias[];
   onEliminarInasistencia?: (id: string) => void;
@@ -33,6 +35,8 @@ export type SeccionAdmin = 'revision-denuncias' | 'reportes-exportacion' | 'impo
 export const AdminPanel: React.FC<AdminPanelProps> = ({
   maestroVigente,
   onGuardarMaestro,
+  maestroVirtual,
+  onGuardarMaestroVirtual,
   reportesInasistencia,
   denunciasVarias,
   onEliminarInasistencia,
@@ -45,7 +49,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const totalInasistencias = reportesInasistencia.length;
   const totalDenunciasVarias = denunciasVarias.length;
-  const totalClasesMaestro = maestroVigente?.registros?.length || 0;
+  const totalClasesPresencial = maestroVigente?.registros?.length || 0;
+  const totalClasesVirtual = maestroVirtual?.registros?.length || 0;
+  const totalClasesMaestro = totalClasesPresencial + totalClasesVirtual;
 
   return (
     <div className="space-y-6">
@@ -82,8 +88,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <span className="text-[11px] font-bold text-slate-300">Denuncias Varias</span>
             </div>
             <div className="bg-white/10 backdrop-blur-xs px-3.5 py-2 rounded-2xl border border-white/10 text-center">
-              <span className="block text-lg font-black text-amber-400">{totalClasesMaestro}</span>
-              <span className="text-[11px] font-bold text-slate-300">Clases Maestro</span>
+              <span className="block text-lg font-black text-amber-400">
+                {totalClasesPresencial} <span className="text-xs font-normal text-slate-300">P</span> / {totalClasesVirtual} <span className="text-xs font-normal text-slate-300">V</span>
+              </span>
+              <span className="text-[11px] font-bold text-slate-300">Presencial / Virtual</span>
             </div>
           </div>
         </div>
@@ -180,6 +188,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
       {seccionAdmin === 'importar-maestro' && (
         <AdminImportarMaestro
+          maestroPresencial={maestroVigente}
+          onGuardarMaestroPresencial={onGuardarMaestro}
+          maestroVirtual={maestroVirtual}
+          onGuardarMaestroVirtual={onGuardarMaestroVirtual}
           maestroVigente={maestroVigente}
           onGuardarMaestro={onGuardarMaestro}
         />

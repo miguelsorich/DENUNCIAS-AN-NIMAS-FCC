@@ -45,13 +45,29 @@ export interface ReporteInasistencia {
   esAnonimo: boolean;
 }
 
+export type ModalidadEstudio = 'presencial' | 'virtual';
+
+export type RespuestaOportuna = 'SI' | 'NO' | 'REGULAR';
+export type SubeMateriales = 'SI' | 'NO' | 'RETRASO';
+
+export type TipoDenunciaVirtual = 
+  | 'No responde a consultas o dudas en plataforma'
+  | 'No sube materiales ni recursos a tiempo'
+  | 'Inasistencia / No se conecta a sesiones sincrónicas'
+  | 'Obligar a comprar libros o cobros indebidos en plataforma'
+  | 'Obligar a asistir a seminarios o cursos externos'
+  | 'Evaluaciones o exámenes irregulares / sin previo aviso'
+  | 'Otros motivos (Modalidad Virtual)';
+
 export type TipoDenunciaVarias = 
   | 'Obligar a asistir a seminarios'
   | 'Obligar a comprar libros'
-  | 'Otros';
+  | 'Otros'
+  | TipoDenunciaVirtual;
 
 export interface DenunciaVarias {
   id: string;
+  modalidad?: ModalidadEstudio;
   claseId?: string;
   docente?: string;
   nombreMateria?: string;
@@ -62,6 +78,9 @@ export interface DenunciaVarias {
   aula?: string;
   docenteDenunciado?: string; // fallback if only docente was set
   tipoDenuncia: TipoDenunciaVarias;
+  // Campos específicos de modalidad virtual solicitados
+  respondeConsultasOportunamente?: RespuestaOportuna | string;
+  subeMaterialesATiempo?: SubeMateriales | string;
   comentario: string;
   imagenAdjunta?: string; // Data URL de la fotografía o comprobante opcional
   imagenNombre?: string;

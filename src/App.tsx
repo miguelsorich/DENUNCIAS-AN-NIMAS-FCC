@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { MaestroOfertaVigente, ReporteInasistencia, DenunciaVarias } from './types';
+import { MaestroOfertaVigente, ReporteInasistencia, DenunciaVarias, ModalidadEstudio } from './types';
 import { Header, PortalActivo } from './components/Header';
 import { PortalEstudiante, SubmoduloEstudiante } from './components/PortalEstudiante';
 import { AdminPanel } from './components/AdminPanel';
@@ -13,6 +13,7 @@ import {
   REPORTES_INASISTENCIA_INICIALES, 
   DENUNCIAS_VARIAS_INICIALES 
 } from './data/denunciasSeed';
+import { MAESTRO_OFERTA_VIRTUAL_DEFAULT } from './data/ofertaVirtualSeed';
 import { Shield, GraduationCap, Layers, Lock, ShieldAlert } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import {
@@ -29,6 +30,7 @@ import {
 } from './services/supabaseService';
 
 const STORAGE_KEY_MAESTRO = 'maestro_oferta_vigente_admin';
+const STORAGE_KEY_MAESTRO_VIRTUAL = 'maestro_oferta_virtual_vigente';
 const STORAGE_KEY_INASISTENCIAS = 'reportes_inasistencia_docente';
 const STORAGE_KEY_DENUNCIAS_VARIAS = 'denuncias_varias_registradas';
 const STORAGE_KEY_ADMIN_AUTH = 'voz_anonima_admin_autenticado';
@@ -36,6 +38,7 @@ const STORAGE_KEY_ADMIN_AUTH = 'voz_anonima_admin_autenticado';
 export default function App() {
   // Estado de navegación entre Portales: 'estudiante' o 'admin'
   const [portalActivo, setPortalActivo] = useState<PortalActivo>('estudiante');
+  const [modalidadEstudiante, setModalidadEstudiante] = useState<ModalidadEstudio | null>(null);
   const [submoduloEstudiante, setSubmoduloEstudiante] = useState<SubmoduloEstudiante>('inasistencia');
   
   // Estado de autenticación del administrador
@@ -95,6 +98,28 @@ export default function App() {
       console.warn('Error al leer maestro de localStorage:', e);
     }
     return null;
+  });
+
+  // 1.1 Maestro de Oferta Modalidad Virtual
+  const [maestroVirtual, setMaestroVirtual] = useState<MaestroOfertaVigente | null>(() => {
+    try {
+      const guardado = localStorage.getItem(STORAGE_KEY_MAESTRO_VIRTUAL);
+      if (guardado) {
+        const parsed = JSON.parse(guardado);
+        if (parsed && Array.isArray(parsed.registros) && parsed.registros.length > 0) {
+          return {
+            semestre: parsed.semestre || 'Semestre Virtual II / 2026',
+            fechaImportacion: parsed.fechaImportacion || 'Importado',
+            nombreArchivo: parsed.nombreArchivo || 'oferta_virtual.xlsx',
+            totalRegistros: parsed.registros.length,
+            registros: parsed.registros,
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('Error al leer maestro virtual de localStorage:', e);
+    }
+    return MAESTRO_OFERTA_VIRTUAL_DEFAULT;
   });
 
   // 2. Reportes de Inasistencia Docente (Módulo 1) - Limpio sin denuncias de práctica
@@ -304,6 +329,15 @@ export default function App() {
     saveMaestroOfertaSupabase(nuevoMaestro);
   };
 
+  const handleGuardarMaestroVirtual = (nuevoMaestro: MaestroOfertaVigente) => {
+    setMaestroVirtual(nuevoMaestro);
+    try {
+      localStorage.setItem(STORAGE_KEY_MAESTRO_VIRTUAL, JSON.stringify(nuevoMaestro));
+    } catch {
+      // Ignorar errores
+    }
+  };
+
   const handleRegistrarReporteInasistencia = (nuevoReporte: ReporteInasistencia) => {
     setReportesInasistencia((prev) => {
       const actualizados = [nuevoReporte, ...prev];
@@ -394,9 +428,13 @@ export default function App() {
         {/* PORTAL DE ESTUDIANTES (Vista pública por defecto para realizar denuncias) */}
         {portalActivo === 'estudiante' && (
           <PortalEstudiante
+            modalidadActiva={modalidadEstudiante}
+            onCambiarModalidad={setModalidadEstudiante}
             submoduloActivo={submoduloEstudiante}
             onCambiarSubmodulo={setSubmoduloEstudiante}
             maestroVigente={maestroVigente}
+            maestroVirtual={maestroVirtual}
+            onGuardarMaestroVirtual={handleGuardarMaestroVirtual}
             onRegistrarReporteInasistencia={handleRegistrarReporteInasistencia}
             onRegistrarDenunciaVarias={handleRegistrarDenunciaVarias}
           />
@@ -408,6 +446,8 @@ export default function App() {
             <AdminPanel
               maestroVigente={maestroVigente}
               onGuardarMaestro={handleGuardarMaestro}
+              maestroVirtual={maestroVirtual}
+              onGuardarMaestroVirtual={handleGuardarMaestroVirtual}
               reportesInasistencia={reportesInasistencia}
               denunciasVarias={denunciasVarias}
               onEliminarInasistencia={handleEliminarInasistencia}

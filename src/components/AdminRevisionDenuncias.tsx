@@ -20,7 +20,9 @@ import {
   AlertTriangle,
   Camera,
   Eye,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Laptop,
+  Building2
 } from 'lucide-react';
 
 interface AdminRevisionDenunciasProps {
@@ -519,6 +521,30 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
 
                 <button
                   type="button"
+                  onClick={() => setFiltroTipoDenuncia('No responde a consultas o dudas en plataforma')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    filtroTipoDenuncia === 'No responde a consultas o dudas en plataforma'
+                      ? 'bg-blue-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Consultas Virtuales
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFiltroTipoDenuncia('No sube materiales ni recursos a tiempo')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    filtroTipoDenuncia === 'No sube materiales ni recursos a tiempo'
+                      ? 'bg-blue-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Materiales
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setFiltroTipoDenuncia('Otros')}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     filtroTipoDenuncia === 'Otros'
@@ -601,6 +627,18 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
                           <Tag className="w-3.5 h-3.5 text-blue-800" />
                           {denuncia.tipoDenuncia}
                         </span>
+
+                        {denuncia.modalidad === 'virtual' ? (
+                          <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs flex items-center gap-1">
+                            <Laptop className="w-3 h-3 text-indigo-700" />
+                            Modalidad Virtual
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs flex items-center gap-1">
+                            <Building2 className="w-3 h-3 text-slate-500" />
+                            Modalidad Presencial
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-3">
@@ -612,6 +650,47 @@ export const AdminRevisionDenuncias: React.FC<AdminRevisionDenunciasProps> = ({
                         </div>
                       </div>
                     </div>
+
+                    {/* Indicadores Clave de Modalidad Virtual si aplican */}
+                    {(denuncia.respondeConsultasOportunamente || denuncia.subeMaterialesATiempo) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-blue-50/60 p-3 rounded-xl border border-blue-200/80 text-xs">
+                        <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-blue-100">
+                          <span className="text-slate-600 font-semibold text-[11px]">
+                            ¿Responde consultas oportunamente?
+                          </span>
+                          <span className={`font-bold text-xs px-2 py-0.5 rounded-full ${
+                            denuncia.respondeConsultasOportunamente === 'SI'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : denuncia.respondeConsultasOportunamente === 'REGULAR'
+                              ? 'bg-amber-100 text-amber-900'
+                              : 'bg-red-100 text-red-900'
+                          }`}>
+                            {denuncia.respondeConsultasOportunamente === 'SI' && '✓ Sí, oportuno'}
+                            {denuncia.respondeConsultasOportunamente === 'REGULAR' && '⚠️ Con retraso'}
+                            {denuncia.respondeConsultasOportunamente === 'NO' && '⛔ No responde'}
+                            {!denuncia.respondeConsultasOportunamente && '—'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-blue-100">
+                          <span className="text-slate-600 font-semibold text-[11px]">
+                            ¿Sube materiales a tiempo?
+                          </span>
+                          <span className={`font-bold text-xs px-2 py-0.5 rounded-full ${
+                            denuncia.subeMaterialesATiempo === 'SI'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : denuncia.subeMaterialesATiempo === 'RETRASO'
+                              ? 'bg-amber-100 text-amber-900'
+                              : 'bg-red-100 text-red-900'
+                          }`}>
+                            {denuncia.subeMaterialesATiempo === 'SI' && '✓ Sí, a tiempo'}
+                            {denuncia.subeMaterialesATiempo === 'RETRASO' && '⚠️ Con retraso'}
+                            {denuncia.subeMaterialesATiempo === 'NO' && '⛔ No sube'}
+                            {!denuncia.subeMaterialesATiempo && '—'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Información de la Clase / Docente denunciado */}
                     <div className="bg-slate-50/90 p-4 rounded-xl border border-slate-200 space-y-3">

@@ -75,8 +75,20 @@ export const exportarReporteDenunciasVarias = (
 
   const filas = denuncias.map((den) => {
     const docenteVal = den.docente || den.docenteDenunciado;
+    
+    let respuestaConsultas = 'N/A';
+    if (den.respondeConsultasOportunamente === 'SI') respuestaConsultas = 'Sí, oportunamente';
+    else if (den.respondeConsultasOportunamente === 'REGULAR') respuestaConsultas = 'Con retraso / Regular';
+    else if (den.respondeConsultasOportunamente === 'NO') respuestaConsultas = 'No responde';
+
+    let subeMateriales = 'N/A';
+    if (den.subeMaterialesATiempo === 'SI') subeMateriales = 'Sí, a tiempo';
+    else if (den.subeMaterialesATiempo === 'RETRASO') subeMateriales = 'Con retraso';
+    else if (den.subeMaterialesATiempo === 'NO') subeMateriales = 'No sube';
+
     return {
       FECHA: den.fechaRegistro || '',
+      MODALIDAD: den.modalidad === 'virtual' ? 'VIRTUAL' : 'PRESENCIAL',
       DOCENTE: docenteVal ? docenteVal.trim() : 'No especificado',
       MATERIA: den.nombreMateria ? den.nombreMateria.trim() : 'No especificado',
       SIGLA: den.sigla ? den.sigla.trim() : 'No especificado',
@@ -85,6 +97,9 @@ export const exportarReporteDenunciasVarias = (
       HORARIO: den.horario ? den.horario.trim() : 'No especificado',
       AULA: den.aula ? den.aula.trim() : 'No especificado',
       'TIPO DE DENUNCIA': den.tipoDenuncia || '',
+      'RESPONDE CONSULTAS': respuestaConsultas,
+      'SUBE MATERIALES A TIEMPO': subeMateriales,
+      'TIENE FOTO PRUEBA': den.imagenAdjunta ? 'SÍ' : 'NO',
       'COMENTARIO O DESCRIPCIÓN': den.comentario ? den.comentario.trim() : 'Sin descripción adicional',
     };
   });
@@ -93,7 +108,8 @@ export const exportarReporteDenunciasVarias = (
 
   // Ajustar anchos de columna automáticos
   worksheet['!cols'] = [
-    { wch: 32 }, // FECHA
+    { wch: 30 }, // FECHA
+    { wch: 14 }, // MODALIDAD
     { wch: 35 }, // DOCENTE
     { wch: 35 }, // MATERIA
     { wch: 12 }, // SIGLA
@@ -101,7 +117,10 @@ export const exportarReporteDenunciasVarias = (
     { wch: 15 }, // DÍA
     { wch: 18 }, // HORARIO
     { wch: 14 }, // AULA
-    { wch: 32 }, // TIPO DE DENUNCIA
+    { wch: 35 }, // TIPO DE DENUNCIA
+    { wch: 24 }, // RESPONDE CONSULTAS
+    { wch: 24 }, // SUBE MATERIALES A TIEMPO
+    { wch: 16 }, // TIENE FOTO PRUEBA
     { wch: 60 }, // COMENTARIO O DESCRIPCIÓN
   ];
 

@@ -7,6 +7,7 @@ interface ModalReemplazarMaestroProps {
   nuevoResultado: ValidacionImportacion;
   nuevoNombreArchivo: string;
   nuevoSemestre: string;
+  modalidad?: 'presencial' | 'virtual';
   onConfirmarReemplazo: () => void;
   onCancelar: () => void;
 }
@@ -16,9 +17,12 @@ export const ModalReemplazarMaestro: React.FC<ModalReemplazarMaestroProps> = ({
   nuevoResultado,
   nuevoNombreArchivo,
   nuevoSemestre,
+  modalidad = 'presencial',
   onConfirmarReemplazo,
   onCancelar,
 }) => {
+  const etiquetaModalidad = modalidad === 'virtual' ? 'Modalidad Virtual' : 'Modalidad Presencial';
+
   return (
     <div
       id="modal-confirmar-reemplazo"
@@ -43,11 +47,18 @@ export const ModalReemplazarMaestro: React.FC<ModalReemplazarMaestroProps> = ({
         </div>
 
         <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
+              modalidad === 'virtual' ? 'bg-indigo-100 text-indigo-900' : 'bg-blue-100 text-blue-900'
+            }`}>
+              {etiquetaModalidad}
+            </span>
+          </div>
           <h3 id="modal-titulo-reemplazar" className="text-lg font-bold text-slate-900 leading-snug">
-            Ya existe un Maestro de Oferta cargado. ¿Desea reemplazarlo con el nuevo archivo?
+            Ya existe un Maestro de Oferta ({etiquetaModalidad}) cargado. ¿Desea reemplazarlo con el nuevo archivo?
           </h3>
           <p className="text-xs sm:text-sm text-slate-600">
-            Al reemplazar, la oferta académica actual será actualizada con los {nuevoResultado.totalFilas} registros del nuevo archivo seleccionado para el semestre vigente.
+            Al reemplazar, la oferta académica de <strong>{etiquetaModalidad}</strong> será actualizada con los {nuevoResultado.totalFilas} registros del nuevo archivo seleccionado para el semestre vigente.
           </p>
         </div>
 

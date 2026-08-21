@@ -253,6 +253,7 @@ export async function fetchDenunciasVariasSupabase(): Promise<DenunciaVarias[] |
 
     return data.map((item: any) => ({
       id: item.id,
+      modalidad: item.modalidad || (item.tipo_denuncia?.includes('Virtual') || item.tipo_denuncia?.includes('plataforma') ? 'virtual' : 'presencial'),
       claseId: item.clase_id || item.claseId,
       docente: item.docente || '',
       nombreMateria: item.nombre_materia || item.nombreMateria || '',
@@ -263,6 +264,8 @@ export async function fetchDenunciasVariasSupabase(): Promise<DenunciaVarias[] |
       aula: item.aula || '',
       docenteDenunciado: item.docente_denunciado || item.docenteDenunciado || item.docente,
       tipoDenuncia: item.tipo_denuncia || item.tipoDenuncia || 'Otros',
+      respondeConsultasOportunamente: item.responde_consultas || item.respondeConsultasOportunamente || undefined,
+      subeMaterialesATiempo: item.sube_materiales || item.subeMaterialesATiempo || undefined,
       comentario: item.comentario || '',
       imagenAdjunta: item.imagen_adjunta || item.imagenAdjunta || undefined,
       imagenNombre: item.imagen_nombre || item.imagenNombre || undefined,
@@ -279,6 +282,7 @@ export async function insertDenunciaVariasSupabase(denuncia: DenunciaVarias): Pr
   try {
     const payload: any = {
       id: denuncia.id,
+      modalidad: denuncia.modalidad || 'presencial',
       clase_id: denuncia.claseId || null,
       docente: denuncia.docente || '',
       nombre_materia: denuncia.nombreMateria || '',
@@ -289,6 +293,8 @@ export async function insertDenunciaVariasSupabase(denuncia: DenunciaVarias): Pr
       aula: denuncia.aula || '',
       docente_denunciado: denuncia.docenteDenunciado || denuncia.docente || '',
       tipo_denuncia: denuncia.tipoDenuncia,
+      responde_consultas: denuncia.respondeConsultasOportunamente || null,
+      sube_materiales: denuncia.subeMaterialesATiempo || null,
       comentario: denuncia.comentario || '',
       fecha_registro: denuncia.fechaRegistro,
       es_anonimo: denuncia.esAnonimo,
@@ -305,9 +311,24 @@ export async function insertDenunciaVariasSupabase(denuncia: DenunciaVarias): Pr
 
     if (error) {
       console.warn('Error al insertar denuncia varias en Supabase:', error.message);
-      // Si falla por columnas adicionales no existentes en supabase, reintentar sin campos de imagen
+      // Si falla por columnas adicionales no existentes en supabase, reintentar con payload base
       if (error.message?.includes('column') || error.code === '42703') {
-        const { imagen_adjunta, imagen_nombre, ...safePayload } = payload;
+        const safePayload = {
+          id: payload.id,
+          clase_id: payload.clase_id,
+          docente: payload.docente,
+          nombre_materia: payload.nombre_materia,
+          sigla: payload.sigla,
+          grupo: payload.grupo,
+          dia: payload.dia,
+          horario: payload.horario,
+          aula: payload.aula,
+          docente_denunciado: payload.docente_denunciado,
+          tipo_denuncia: payload.tipo_denuncia,
+          comentario: payload.comentario,
+          fecha_registro: payload.fecha_registro,
+          es_anonimo: payload.es_anonimo,
+        };
         const { error: fallbackError } = await supabase
           .from('denuncias_varias')
           .insert([safePayload]);

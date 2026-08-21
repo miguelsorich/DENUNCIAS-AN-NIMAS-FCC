@@ -493,7 +493,81 @@ export const descargarPlantillaExcel = (semestre: string = 'II-2026') => {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Maestro_Oferta');
 
-  XLSX.writeFile(workbook, `plantilla_maestro_oferta_${semestre.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+  XLSX.writeFile(workbook, `plantilla_maestro_oferta_presencial_${semestre.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+};
+
+/**
+ * Creates and downloads sample Excel file for Virtual Modality
+ */
+export const descargarPlantillaVirtualExcel = (semestre: string = 'II-2026') => {
+  const data = [
+    [
+      'SIGLA',
+      'GR',
+      'NOMBRE DE LA MATERIA',
+      'CARRERAS',
+      'DOCENTE',
+      'DÍA',
+      'HORARIO',
+      'AULA',
+    ],
+    [
+      'CPA-100',
+      'V1',
+      'CONTABILIDAD BASICA I (VIRTUAL)',
+      'CONTADURIA PUBLICA',
+      'LIC. JUSTINIANO PINTO CARLOS',
+      'LUNES Y MIERCOLES',
+      '18:15 - 20:30',
+      'AULA VIRTUAL 1 (TEAMS / MOODLE)',
+    ],
+    [
+      'CPA-200',
+      'V1',
+      'CONTABILIDAD DE COSTOS I (VIRTUAL)',
+      'CONTADURIA PUBLICA',
+      'LIC. ROJAS BANEGAS MARIO',
+      'MARTES Y JUEVES',
+      '19:00 - 21:15',
+      'AULA VIRTUAL 2 (MOODLE / ZOOM)',
+    ],
+    [
+      'AUD-300',
+      'V2',
+      'AUDITORIA FINANCIERA I (VIRTUAL)',
+      'AUDITORIA FINANCIERA',
+      'LIC. AGUILERA SUAREZ JAVIER',
+      'LUNES Y VIERNES',
+      '07:00 - 09:15',
+      'CAMPUS VIRTUAL FCCA (MOODLE)',
+    ],
+    [
+      'FIN-400',
+      'V1',
+      'ADMINISTRACION FINANCIERA (VIRTUAL)',
+      'INGENIERIA FINANCIERA',
+      'LIC. MENDOZA CALDERON ELENA',
+      'MIERCOLES Y VIERNES',
+      '20:30 - 22:45',
+      'PLATAFORMA VIRTUAL (TEAMS)',
+    ],
+    [
+      'MAT-101',
+      'V3',
+      'MATEMATICA FINANCIERA (VIRTUAL)',
+      'TODAS LAS CARRERAS',
+      'LIC. SUAREZ VARGAS PATRICIA',
+      'MARTES Y JUEVES',
+      '16:00 - 18:15',
+      'AULA VIRTUAL 3 (CLASSROOM)',
+    ],
+  ];
+
+  const worksheet = XLSX.utils.aoa_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Maestro_Virtual');
+
+  XLSX.writeFile(workbook, `plantilla_maestro_oferta_virtual_${semestre.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
 };
 
 /**
@@ -514,7 +588,26 @@ export const descargarPlantillaCSV = (semestre: string = 'II-2026') => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `plantilla_maestro_oferta_${semestre.replace(/[^a-zA-Z0-9]/g, '_')}.csv`);
+  link.setAttribute('download', `plantilla_maestro_oferta_presencial_${semestre.replace(/[^a-zA-Z0-9]/g, '_')}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+export const descargarPlantillaVirtualCSV = (semestre: string = 'II-2026') => {
+  const csvContent =
+    'SIGLA,GR,NOMBRE DE LA MATERIA,CARRERAS,DOCENTE,DÍA,HORARIO,AULA\n' +
+    'CPA-100,V1,CONTABILIDAD BASICA I (VIRTUAL),CONTADURIA PUBLICA,LIC. JUSTINIANO PINTO CARLOS,LUNES Y MIERCOLES,18:15 - 20:30,AULA VIRTUAL 1 (TEAMS)\n' +
+    'CPA-200,V1,CONTABILIDAD DE COSTOS I (VIRTUAL),CONTADURIA PUBLICA,LIC. ROJAS BANEGAS MARIO,MARTES Y JUEVES,19:00 - 21:15,AULA VIRTUAL 2 (MOODLE)\n' +
+    'AUD-300,V2,AUDITORIA FINANCIERA I (VIRTUAL),AUDITORIA FINANCIERA,LIC. AGUILERA SUAREZ JAVIER,LUNES Y VIERNES,07:00 - 09:15,CAMPUS VIRTUAL FCCA\n' +
+    'FIN-400,V1,ADMINISTRACION FINANCIERA (VIRTUAL),INGENIERIA FINANCIERA,LIC. MENDOZA CALDERON ELENA,MIERCOLES Y VIERNES,20:30 - 22:45,PLATAFORMA VIRTUAL\n' +
+    'MAT-101,V3,MATEMATICA FINANCIERA (VIRTUAL),TODAS LAS CARRERAS,LIC. SUAREZ VARGAS PATRICIA,MARTES Y JUEVES,16:00 - 18:15,AULA VIRTUAL 3 (CLASSROOM)';
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `plantilla_maestro_oferta_virtual_${semestre.replace(/[^a-zA-Z0-9]/g, '_')}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
